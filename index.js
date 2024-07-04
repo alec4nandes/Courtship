@@ -54,9 +54,21 @@ class Player {
         return this.cards;
     }
 
+    setCards(cards) {
+        this.cards = cards;
+    }
+
     drawCard() {
-        this.hand = null;
         this.cards.push(this.deck.drawCard());
+    }
+
+    drawSingleCardForTurn() {
+        this.drawCard();
+        // strategic matching of court's suit played
+        // on previous turn doesn't apply anymore,
+        // therefore reset hands
+        this.setHand(null);
+        this.opponent.setHand(null);
     }
 
     getHand() {
@@ -67,14 +79,17 @@ class Player {
         this.hand = null;
         if (this.validateHand(hand)) {
             this.hand = hand;
-            this.cards = this.cards.filter((card) => !this.hand.includes(card));
+            this.setCards(this.cards.filter((card) => !hand.includes(card)));
             while (this.cards.length < 5) {
-                this.cards.push(this.deck.drawCard());
+                this.drawCard();
             }
         }
     }
 
     validateHand(hand) {
+        if (!hand) {
+            return;
+        }
         if (!hand.length) {
             alert("Please select some cards.");
             return false;
@@ -85,7 +100,7 @@ class Player {
             return false;
         }
         const court = courts[0],
-            numbered = hand.filter((card) => !courts.includes(card));
+            numbered = getNumbered({ hand, court });
         if (
             Object.entries({ Jack: 2, Queen: 3, King: 4 }).find(
                 ([rank, count]) =>
@@ -127,8 +142,10 @@ class Player {
         if (!this.hand) {
             return false;
         }
-        const court = this.getCourt(),
-            numbered = this.hand.filter((card) => card !== court),
+        const numbered = getNumbered({
+                hand: this.hand,
+                court: this.getCourt(),
+            }),
             isRecovery = this.isRecovery(numbered),
             basePoints = this.getBasePoints(numbered),
             factor = this.getFactor(),
@@ -148,9 +165,8 @@ class Player {
             opponentCourtSuit = getSuit(opponentCourt);
         return numbered
             .map((card) => {
-                const suit = getSuit(card);
-                let rank = getRank(card);
-                rank = rank === "Ace" ? 1 : +rank;
+                const suit = getSuit(card),
+                    rank = getRank(card);
                 return rank * (suit === opponentCourtSuit ? 2 : 1);
             })
             .reduce((acc, num) => acc + num, 0);
@@ -189,7 +205,8 @@ class Player {
 // GLOBAL FUNCTIONS
 
 function getRank(card) {
-    return card?.split(" ")[0];
+    const rank = card?.split(" ")[0];
+    return rank === "Ace" ? 1 : isNaN(rank) ? rank : +rank;
 }
 
 function getSuit(card) {
@@ -200,6 +217,10 @@ function getCourts(hand) {
     return hand?.filter((card) =>
         ["Jack", "Queen", "King"].includes(getRank(card))
     );
+}
+
+function getNumbered({ hand, court }) {
+    return hand?.filter((card) => card !== court);
 }
 
 // START GAME
@@ -257,15 +278,34 @@ function startGame({ player1Name, player2Name }) {
     }
 
     function displayDrawPileCount() {
-        const player = players[getOtherPlayer()],
-            name = player.getName(),
-            hand = player.getHand(),
-            points = player.getPoints();
+        const otherPlayer = players[getOtherPlayer()],
+            otherName = otherPlayer.getName(),
+            otherHand = sortHand(otherPlayer),
+            otherPoints = otherPlayer.getPoints(),
+            player = players[currentPlayer],
+            playerName = player.getName(),
+            playerHand = sortHand(player);
         document.querySelector("#draw-pile").innerHTML =
             `${deck.getDeck().length} cards left in draw pile.` +
-            (hand
-                ? `<br/>${name} just played: ${hand.join(", ")} (${points})`
+            (otherHand.length
+                ? `<br/>${otherName} just played: ${otherHand.join(
+                      ", "
+                  )}<br/><strong>${otherPoints}</strong>`
+                : "") +
+            (playerHand.length
+                ? `<br/><em>(before that, ${playerName} played ${playerHand.join(
+                      ", "
+                  )})</em>`
                 : "");
+    }
+
+    function sortHand(player) {
+        const court = player.getCourt(),
+            numbered =
+                getNumbered({ hand: player.getHand(), court })?.sort(
+                    (a, b) => getRank(b) - getRank(a)
+                ) || [];
+        return [court, ...numbered].filter(Boolean);
     }
 
     function toggleFormDisabled(p) {
@@ -278,7 +318,7 @@ function startGame({ player1Name, player2Name }) {
 
     function handleSubmitPlay({ e, player }) {
         e.preventDefault();
-        const hand = [...e.target.querySelectorAll("input")]
+        const hand = [...e.target.querySelectorAll(`input[type="checkbox"]`)]
             .filter(({ checked }) => checked)
             .map(({ value }) => value);
         player.setHand(hand);
@@ -287,7 +327,7 @@ function startGame({ player1Name, player2Name }) {
 
     function handleClickDrawCard({ e, player }) {
         e.preventDefault();
-        player.drawCard();
+        player.drawSingleCardForTurn();
         displayPlayers();
     }
 }

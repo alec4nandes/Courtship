@@ -1,0 +1,36 @@
+body {
+    background-color: #222;
+    color: #eee;
+
+    #players {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        text-align: center;
+
+        #draw-pile {
+            width: 100%;
+        }
+
+        form {
+            width: 160px;
+
+            .inputs {
+                display: flex;
+                flex-direction: column;
+                gap: 5px;
+
+                label {
+                    background-color: #333;
+                    display: flex;
+                    justify-content: left;
+
+                    &:has(input[disabled]) {
+                        opacity: 0.6;
+                    }
+                }
+            }
+        }
+    }
+}

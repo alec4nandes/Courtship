@@ -193,34 +193,8 @@ function startGame() {
         const player = players[p],
             formElem = document.querySelector(`#${p}`);
         formElem.onsubmit = (e) => handleSubmitPlay({ e, player });
-        formElem.querySelector("#draw-card").onclick = (e) => {
-            e.preventDefault();
-            player.drawCard();
-            displayPlayers();
-        };
-    }
-
-    function toggleFormDisabled(p) {
-        [
-            ...document
-                .querySelector(`#${p}`)
-                .querySelectorAll("button, input"),
-        ].forEach((elem) => (elem.disabled = p !== currentPlayer));
-    }
-
-    function handleSubmitPlay({ e, player }) {
-        e.preventDefault();
-        const hand = [...e.target.querySelectorAll("input")]
-            .filter(({ checked }) => checked)
-            .map(({ value }) => value);
-        player.setHand(hand);
-        player.playHand() && displayPlayers();
-    }
-
-    function displayDrawPileCount() {
-        document.querySelector("#draw-pile").innerHTML = `${
-            deck.getDeck().length
-        } cards left in draw pile`;
+        formElem.querySelector("#draw-card").onclick = (e) =>
+            handleClickDrawCard({ e, player });
     }
 
     function displayPlayers() {
@@ -246,5 +220,34 @@ function startGame() {
         toggleFormDisabled(currentPlayer);
         toggleFormDisabled(otherPlayer);
         currentPlayer = otherPlayer;
+    }
+
+    function displayDrawPileCount() {
+        document.querySelector("#draw-pile").innerHTML = `${
+            deck.getDeck().length
+        } cards left in draw pile`;
+    }
+
+    function toggleFormDisabled(p) {
+        [
+            ...document
+                .querySelector(`#${p}`)
+                .querySelectorAll("button, input"),
+        ].forEach((elem) => (elem.disabled = p !== currentPlayer));
+    }
+
+    function handleSubmitPlay({ e, player }) {
+        e.preventDefault();
+        const hand = [...e.target.querySelectorAll("input")]
+            .filter(({ checked }) => checked)
+            .map(({ value }) => value);
+        player.setHand(hand);
+        player.playHand() && displayPlayers();
+    }
+
+    function handleClickDrawCard({ e, player }) {
+        e.preventDefault();
+        player.drawCard();
+        displayPlayers();
     }
 }

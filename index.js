@@ -128,17 +128,9 @@ class Player {
             return false;
         }
         const court = this.getCourt(),
-            opponentCourt = this.opponent.getCourt(),
             numbered = this.hand.filter((card) => card !== court),
             isRecovery = this.isRecovery(numbered),
-            basePoints = numbered
-                .map((card) => {
-                    const suit = getSuit(card);
-                    let rank = getRank(card);
-                    rank = rank === "Ace" ? 1 : +rank;
-                    return rank * (suit === getSuit(opponentCourt) ? 2 : 1);
-                })
-                .reduce((acc, num) => acc + num, 0),
+            basePoints = this.getBasePoints(numbered),
             factor = this.getFactor(),
             points = (isRecovery ? 1 : -1) * (basePoints * factor);
         this.setPoints(`${isRecovery ? "RECOVER" : "ATTACK"} ${points}`);
@@ -151,12 +143,29 @@ class Player {
         return getCourts(this.hand)?.[0];
     }
 
+    getBasePoints(numbered) {
+        const opponentCourt = this.opponent.getCourt(),
+            opponentCourtSuit = getSuit(opponentCourt);
+        return numbered
+            .map((card) => {
+                const suit = getSuit(card);
+                let rank = getRank(card);
+                rank = rank === "Ace" ? 1 : +rank;
+                return rank * (suit === opponentCourtSuit ? 2 : 1);
+            })
+            .reduce((acc, num) => acc + num, 0);
+    }
+
     getFactor() {
         const opponentCourt = this.opponent.getCourt(),
-            opponentSuit = getSuit(opponentCourt),
+            opponentCourtSuit = getSuit(opponentCourt),
             courtSuit = getSuit(this.getCourt()),
             factor =
-                courtSuit && opponentSuit && courtSuit === opponentSuit ? 2 : 1;
+                courtSuit &&
+                opponentCourtSuit &&
+                courtSuit === opponentCourtSuit
+                    ? 2
+                    : 1;
         return factor;
     }
 

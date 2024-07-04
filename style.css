@@ -3,20 +3,14 @@ body {
     color: #eee;
 
     #players {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px;
-        justify-content: center;
         text-align: center;
-
-        #draw-pile {
-            width: 100%;
-        }
 
         form {
             width: 160px;
+            margin: auto;
 
-            .draw-card {
+            .draw-card,
+            .inputs {
                 margin-bottom: 20px;
             }
 

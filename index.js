@@ -55,6 +55,7 @@ class Player {
     }
 
     drawCard() {
+        this.hand = null;
         this.cards.push(this.deck.drawCard());
     }
 
@@ -248,16 +249,14 @@ function startGame({ player1Name, player2Name }) {
 
     function displayDrawPileCount() {
         const player = players[getOtherPlayer()],
-            hand = players[getOtherPlayer()].getHand();
-        document.querySelector("#draw-pile").innerHTML = `${
-            deck.getDeck().length
-        } cards left in draw pile.${
-            hand
-                ? `<br/>${player.getName()} just played: ${hand.join(
-                      ", "
-                  )} (${player.getPoints()})`
-                : ""
-        }`;
+            name = player.getName(),
+            hand = player.getHand(),
+            points = player.getPoints();
+        document.querySelector("#draw-pile").innerHTML =
+            `${deck.getDeck().length} cards left in draw pile.` +
+            (hand
+                ? `<br/>${name} just played: ${hand.join(", ")} (${points})`
+                : "");
     }
 
     function toggleFormDisabled(p) {

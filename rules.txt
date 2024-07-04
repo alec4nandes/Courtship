@@ -1,0 +1,29 @@
+
+Each player starts off with 60 HP and 5 cards
+
+Each hand plays 1-4 numbered cards with an optional court card
+    Hearts are recovery points, other suits are attack points
+    Must play at least one numbered card
+    Additional numbered cards can be played alongside a court card. The rank of the court card determines the extra cards
+        No court cards: 1 numbered card
+        Jack: 2 numbered cards
+        Queen: 3 numbered cards
+        King: 4 numbered cards
+    Can only play one court card per turn
+    Each player must have at least 5 cards at the start of every turn
+        Cards are replaced from a draw pile
+        Players can decide to draw without playing any cards
+        Players cannot move if they have only court cards — they must pull another card
+
+Turns are either recovery (all numbered Hearts), or attack (numbered mix of other suits)
+    The suits of the court cards can vary 
+
+Point calculation (numbered Hearts = recovery, numbered other suits = attack)
+    Double a card’s points if it is same suit as court card just played by opponent
+    Double total attack or recovery points if court card is same suit as court card just played by opponent. Example:
+        Opponent plays Jack of Clubs, 5 of Clubs, and 8 of Spades
+            You take 5+8=13 points damage
+        You play Queen of Clubs, 5 of Clubs, 7 of Diamonds, and 2 of Spades
+            Opponent takes 2(5*2+7+2) = 38 points damage
+
+Play until someone runs out of HP, or cards are exhausted (highest HP wins)

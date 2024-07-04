@@ -43,7 +43,6 @@ export default class Player {
     }
 
     autoMove() {
-        // TODO: remove line:
         this.#isHidden && console.log(this.#cards);
         const sortNumRanksDescending = (a, b) => getRank(b) - getRank(a),
             courts = getCourts(this.#cards),
@@ -72,8 +71,6 @@ export default class Player {
                 pusher(recoveryCards);
                 pusher(attackCards);
             }
-            // sort hands by highest court rank, then highest number
-            // TODO: work in logic that compares points
             hands.sort(
                 (a, b) =>
                     Math.abs(this.#calculatePoints({ hand: b, court: b[0] })) -
@@ -98,8 +95,7 @@ export default class Player {
         }
     }
 
-    // see rules for logic below
-    // TODO: add rules
+    // see rules.txt for logic below
     #validateHand(hand) {
         if (!hand) {
             // both hands will be null after a player draws card

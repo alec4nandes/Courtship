@@ -42,6 +42,10 @@ class Player {
         this.hp = 200;
     }
 
+    getName() {
+        return this.name;
+    }
+
     setOpponent(player) {
         this.opponent = player;
     }
@@ -123,14 +127,21 @@ class Player {
             return false;
         }
         const court = this.getCourt(),
-            factor = this.getFactor(),
+            opponentCourt = this.opponent.getCourt(),
             numbered = this.hand.filter((card) => card !== court),
-            basePoints = numbered
-                .map(getRank)
-                .reduce((acc, num) => acc + (num === "Ace" ? 1 : +num), 0),
             isRecovery = this.isRecovery(numbered),
+            basePoints = numbered
+                .map((card) => {
+                    const suit = getSuit(card);
+                    let rank = getRank(card);
+                    rank = rank === "Ace" ? 1 : +rank;
+                    return rank * (suit === getSuit(opponentCourt) ? 2 : 1);
+                })
+                .reduce((acc, num) => acc + num, 0),
+            factor = this.getFactor(),
             points = (isRecovery ? 1 : -1) * (basePoints * factor);
-        console.log(isRecovery ? "RECOVER" : "ATTACK", points);
+        this.setPoints(`${isRecovery ? "RECOVER" : "ATTACK"} ${points}`);
+        console.log();
         isRecovery ? this.setHP(points) : this.opponent.setHP(points);
         return true;
     }
@@ -155,6 +166,14 @@ class Player {
     setHP(points) {
         this.hp += points;
     }
+
+    getPoints() {
+        return this.points;
+    }
+
+    setPoints(points) {
+        this.points = points;
+    }
 }
 
 // GLOBAL FUNCTIONS
@@ -175,13 +194,13 @@ function getCourts(hand) {
 
 // START GAME
 
-startGame();
+startGame({ player1Name: "Alec", player2Name: "CPU" });
 
-function startGame() {
+function startGame({ player1Name, player2Name }) {
     const deck = new Deck(),
         players = {
-            player1: new Player({ name: "Alec", deck }),
-            player2: new Player({ name: "CPU", deck }),
+            player1: new Player({ name: player1Name, deck }),
+            player2: new Player({ name: player2Name, deck }),
         };
     players.player1.setOpponent(players.player2);
     players.player2.setOpponent(players.player1);
@@ -193,6 +212,9 @@ function startGame() {
         const player = players[p],
             formElem = document.querySelector(`#${p}`);
         formElem.onsubmit = (e) => handleSubmitPlay({ e, player });
+        formElem.querySelector(
+            ".name"
+        ).innerHTML = `<p>${player.getName()}</p>`;
         formElem.querySelector(".draw-card").onclick = (e) =>
             handleClickDrawCard({ e, player });
     }
@@ -206,26 +228,36 @@ function startGame() {
                     .getCards()
                     .map(
                         (card) => `
-                        <label>
-                            <input type="checkbox" value="${card}"/>
-                            ${card}
-                        </label>
-                    `
+                            <label>
+                                <input type="checkbox" value="${card}"/>
+                                ${card}
+                            </label>
+                        `
                     )
                     .join("") + `<p>${player.getHP()}</p>`;
         }
-        const otherPlayer = ["player1", "player2"].find(
-            (p) => p !== currentPlayer
-        );
+        const otherPlayer = getOtherPlayer();
         toggleFormDisabled(currentPlayer);
         toggleFormDisabled(otherPlayer);
         currentPlayer = otherPlayer;
     }
 
+    function getOtherPlayer() {
+        return ["player1", "player2"].find((p) => p !== currentPlayer);
+    }
+
     function displayDrawPileCount() {
+        const player = players[getOtherPlayer()],
+            hand = players[getOtherPlayer()].getHand();
         document.querySelector("#draw-pile").innerHTML = `${
             deck.getDeck().length
-        } cards left in draw pile`;
+        } cards left in draw pile.${
+            hand
+                ? `<br/>${player.getName()} just played: ${hand.join(
+                      ", "
+                  )} (${player.getPoints()})`
+                : ""
+        }`;
     }
 
     function toggleFormDisabled(p) {

@@ -16,6 +16,10 @@ body {
         form {
             width: 160px;
 
+            .draw-card {
+                margin-bottom: 20px;
+            }
+
             .inputs {
                 display: flex;
                 flex-direction: column;

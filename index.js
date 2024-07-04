@@ -193,7 +193,7 @@ function startGame() {
         const player = players[p],
             formElem = document.querySelector(`#${p}`);
         formElem.onsubmit = (e) => handleSubmitPlay({ e, player });
-        formElem.querySelector("#draw-card").onclick = (e) =>
+        formElem.querySelector(".draw-card").onclick = (e) =>
             handleClickDrawCard({ e, player });
     }
 

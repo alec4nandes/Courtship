@@ -46,7 +46,6 @@ export default class Player {
     }
 
     autoMove() {
-        this.#isHidden && console.log(this.#cards);
         const sortNumRanksDescending = (a, b) => getRank(b) - getRank(a),
             courts = getCourts(this.#cards),
             numbered = this.#cards

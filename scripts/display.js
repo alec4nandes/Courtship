@@ -28,16 +28,17 @@ async function startGame({ player1Name, player2Name, isAuto }) {
     let lastPlayerKey = playerKeys[0];
     displayPlayers();
     // set handlers
+    const userKey = playerKeys[0],
+        formElem = document.querySelector(`#${userKey}`),
+        user = players[userKey];
+    formElem.onsubmit = (e) => handleSubmitPlay({ e, player: user });
+    document.querySelector("#draw-card").onclick = (e) =>
+        handleClickDrawCard({ e, player: user });
+    // set names
     for (const playerKey of playerKeys) {
-        const player = players[playerKey],
-            formElem = document.querySelector(`#${playerKey}`),
-            drawBtn = formElem.querySelector("#draw-card");
-        formElem.onsubmit = (e) => handleSubmitPlay({ e, player });
-        formElem.querySelector(
+        document.querySelector(
             `#${playerKey} .stats .name`
-        ).innerHTML = `<h2>${player.name}</h2>`;
-        drawBtn &&
-            (drawBtn.onclick = (e) => handleClickDrawCard({ e, player }));
+        ).innerHTML = `<h2>${players[playerKey].name}</h2>`;
     }
 
     function displayPlayers() {

@@ -55,10 +55,14 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                             ? `
                             <label class="card">
                                 <input type="checkbox" value="${card}"/>
-                                ${card}
+                                ${getCardImg(card)}
                             </label>
                         `
-                            : `<div class="card">hidden card</div>`
+                            : `
+                                <div class="card">
+                                    <img src="/assets/kings-corner-card-back-min.png" />
+                                </div>
+                            `
                     )
                     .join("");
         }
@@ -81,12 +85,27 @@ async function startGame({ player1Name, player2Name, isAuto }) {
             lastPlayer = players[lastPlayerKey],
             lastPlayerName = lastPlayer.name,
             lastPlayerHand = sortHand(lastPlayer),
-            makeCards = (cards) =>
-                cards.map((card) => `<div class="card">${card}</div>`).join("");
-        document.querySelector(`#${currentPlayerKey} .played`).innerHTML =
-            makeCards(currentPlayerHand);
-        document.querySelector(`#${lastPlayerKey} .played`).innerHTML =
-            makeCards(lastPlayerHand);
+            makePlayedCards = ({ cards, key }) => {
+                const html = cards
+                        .map(
+                            (card) =>
+                                `<div class="card">${getCardImg(card)}</div>`
+                        )
+                        .join(""),
+                    text = cards.length
+                        ? `<p class="played-text"><em>Played Last Turn</em></p>`
+                        : "",
+                    isTextTop = key === playerKeys[1];
+                return isTextTop ? text + html : html + text;
+            };
+        document.querySelector(
+            `#${currentPlayerKey} .played .cards`
+        ).innerHTML = makePlayedCards({
+            cards: currentPlayerHand,
+            key: currentPlayerKey,
+        });
+        document.querySelector(`#${lastPlayerKey} .played .cards`).innerHTML =
+            makePlayedCards({ cards: lastPlayerHand, key: lastPlayerKey });
     }
 
     function getCurrentPlayerKey() {
@@ -100,6 +119,14 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                     (a, b) => getRank(b) - getRank(a)
                 ) || [];
         return [court, ...numbered].filter(Boolean);
+    }
+
+    function getCardImg(card) {
+        return `<img src="/assets/cards/${getCardFileName(card)}" />`;
+    }
+
+    function getCardFileName(card) {
+        return card.replaceAll(" ", "_").toLowerCase() + "-min.jpg";
     }
 
     function handleSubmitPlay({ e, player }) {

@@ -6,6 +6,7 @@ body {
 body {
     height: 100%;
     margin: 0;
+    text-align: center;
 
     #players {
         height: 100%;
@@ -19,67 +20,96 @@ body {
             align-items: center;
             justify-content: center;
             flex-direction: column;
+        }
 
-            .stats {
-                width: 100%;
-                display: flex;
+        .cards {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 20px 10px;
 
-                .name,
-                .score {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .name {
-                    flex: 1;
-                }
-
-                .score {
-                    flex: 1;
+            .card {
+                img {
+                    border: 1px solid #666;
                 }
             }
+        }
 
-            .play {
+        .stats {
+            width: 100%;
+            display: flex;
+
+            .name,
+            .score {
                 display: flex;
                 align-items: center;
                 justify-content: center;
+            }
+
+            .name {
                 flex: 1;
-                flex-direction: column;
+            }
 
-                .cards {
-                    display: flex;
-                    flex: 1;
-                    align-items: center;
-                    justify-content: center;
-                    flex-wrap: wrap;
+            .score {
+                flex: 1;
+            }
+        }
 
-                    .card {
-                        height: 200px;
-                        width: 120px;
-                        border: 1px solid blue;
+        .play {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            flex-direction: column;
 
-                        &:has(input[type="checkbox"]:checked) {
-                            background-color: yellow;
-                        }
+            .cards {
+                flex: 1;
+                gap: 10px;
 
-                        input[type="checkbox"] {
-                            display: none;
-                        }
+                .card {
+                    height: 150px;
+                    width: 100px;
+
+                    img {
+                        height: 100%;
+                        width: 100%;
+                        border-radius: 10px;
+                    }
+
+                    &:has(input[type="checkbox"]:checked) {
+                        background-color: yellow;
+                    }
+
+                    input[type="checkbox"] {
+                        display: none;
                     }
                 }
             }
+        }
 
-            .played {
+        .played {
+            &,
+            .played-text {
                 width: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            }
+
+            .played-text {
+                margin: 0;
+            }
+
+            .cards {
+                gap: 5px;
 
                 .card {
-                    height: 100px;
+                    height: 90px;
                     width: 60px;
-                    border: 1px solid blue;
+
+                    img {
+                        height: 100%;
+                        width: 100%;
+                        border-radius: 5px;
+                    }
                 }
             }
         }
@@ -95,6 +125,12 @@ body {
         #player {
             background-color: burlywood;
             color: #222;
+
+            button#draw-card,
+            button#submit {
+                width: 200px;
+                height: 40px;
+            }
 
             .played {
                 background-color: bisque;

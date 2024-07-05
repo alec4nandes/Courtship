@@ -1,16 +1,17 @@
 function getCourts(hand) {
-    return hand?.filter((card) =>
+    return hand.filter((card) =>
         ["Jack", "Queen", "King"].includes(getRank(card))
     );
 }
 
-function getNumbered({ hand, court }) {
-    return hand?.filter((card) => card !== court);
+function getNumbered(hand) {
+    const courts = getCourts(hand);
+    return hand.filter((card) => !courts.includes(card));
 }
 
 function getRank(card) {
     const rank = card?.split(" ")[0];
-    return rank === "Ace" ? 1 : isNaN(rank) ? rank : +rank;
+    return rank && (rank === "Ace" ? 1 : isNaN(rank) ? rank : +rank);
 }
 
 function getSuit(card) {

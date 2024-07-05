@@ -8,6 +8,15 @@ body {
     margin: 0;
     text-align: center;
 
+    button {
+        height: 40px;
+        width: 200px;
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
     #players {
         height: 100%;
         overflow: auto;
@@ -42,17 +51,11 @@ body {
             display: flex;
 
             .name,
+            .rules,
             .score {
                 display: flex;
                 align-items: center;
                 justify-content: center;
-            }
-
-            .name {
-                flex: 1;
-            }
-
-            .score {
                 flex: 1;
             }
         }
@@ -75,6 +78,12 @@ body {
                     &,
                     img {
                         border-radius: 10px;
+                    }
+
+                    &:has(input[type="checkbox"]) {
+                        &:hover {
+                            cursor: pointer;
+                        }
                     }
 
                     &:has(input[type="checkbox"]:disabled) {
@@ -144,12 +153,6 @@ body {
         #player {
             background-color: burlywood;
             color: #222;
-
-            button#draw-card,
-            button#submit {
-                width: 200px;
-                height: 40px;
-            }
 
             .played {
                 background-color: bisque;

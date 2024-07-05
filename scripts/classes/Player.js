@@ -4,6 +4,9 @@ export default class Player {
     #courtCounts = { Jack: 2, Queen: 3, King: 4 };
     #cards;
     #isHidden;
+    // holds info on last hand played
+    hand = { cards: [], points: 0 };
+    gameOverMessage = false;
 
     constructor({ name, deck, isHidden }) {
         this.name = name;
@@ -13,10 +16,6 @@ export default class Player {
         this.#isHidden = isHidden;
     }
 
-    setOpponent(player) {
-        this.opponent = player;
-    }
-
     /*
         Flow:
             * player picks cards to play from UI
@@ -24,10 +23,82 @@ export default class Player {
             * if valid hand, Player.setHand() returns true and DOM updates
     */
 
+    setOpponent(player) {
+        this.opponent = player;
+    }
+
     getCards() {
         return this.#isHidden
             ? new Array(this.#cards.length).fill(null)
             : this.#cards;
+    }
+
+    // validates and plays hand, while making sure
+    // player holds at least 5 cards afterwards
+    setHand(hand) {
+        if (this.#validateHand(hand)) {
+            this.#cards = this.#cards.filter((card) => !hand.includes(card));
+            while (!this.deck.isEmpty() && this.#cards.length < 5) {
+                this.#drawCard();
+            }
+            const points = this.#playHand(hand);
+            this.hand = { cards: hand, points };
+            return true;
+        }
+    }
+
+    // see rules.txt for logic below
+    #validateHand(hand) {
+        if (!hand) {
+            // both hands will be null after a player draws card
+            // for turn, therefore go to next turn without alert
+            return;
+        }
+        if (!hand.length) {
+            alert("Please select some cards.");
+            return false;
+        }
+        const courts = getCourts(hand);
+        if (courts.length > 1) {
+            alert("Can only play one court card on each turn.");
+            return false;
+        }
+        const court = courts[0],
+            numbered = getNumbered(hand);
+        if (this.#courtIsInvalid({ court, numbered })) {
+            return false;
+        } else if (!court && numbered.length !== 1) {
+            alert("Can only play one card without a court card.");
+            return false;
+        }
+        const numberedHasHearts = numbered.find(
+            (card) => getSuit(card) === "Hearts"
+        );
+        if (numberedHasHearts && !this.#getIsRecovery(numbered)) {
+            alert(
+                "Numbered cards must be all hearts " +
+                    "OR a combination of the other suits."
+            );
+            return false;
+        }
+        return true;
+    }
+
+    #courtIsInvalid({ court, numbered }) {
+        if (!court) {
+            return false;
+        }
+        const rank = getRank(court),
+            count = this.#courtCounts[rank];
+        if (numbered.length !== count) {
+            alert(`A ${rank} must accompany ${count} cards.`);
+            return true;
+        }
+    }
+
+    #getIsRecovery(numbered) {
+        const suits = new Set(numbered.map(getSuit));
+        return suits.has("Hearts") && suits.size === 1;
     }
 
     #drawCard() {
@@ -36,21 +107,64 @@ export default class Player {
             : (this.#cards = [...this.#cards, this.deck.drawCard()]);
     }
 
-    drawSingleCardForTurn() {
-        this.#drawCard();
-        // strategic matching of court's suit played
-        // on previous turn doesn't apply anymore,
-        // therefore reset both hands
-        this.setHand(null);
-        this.opponent.setHand(null);
+    #playHand(hand) {
+        const points = this.#calculatePoints(hand);
+        // positive points increase player's hp,
+        // negative points decrease opponent's hp
+        points > 0 ? (this.hp += points) : (this.opponent.hp += points);
+        if (this.opponent.hp <= 0) {
+            this.gameOverMessage = `${this.opponent.name} has no more HP! ${this.name} wins!`;
+        }
+        return points;
     }
 
+    /* GET POINTS */
+
+    #calculatePoints(hand) {
+        const numbered = getNumbered(hand),
+            isRecovery = this.#getIsRecovery(numbered),
+            basePoints = this.#getBasePoints(numbered),
+            factor = this.#getFactor(hand),
+            points = (isRecovery ? 1 : -1) * (basePoints * factor);
+        return points;
+    }
+
+    #getBasePoints(numbered) {
+        const opponentCourt = this.opponent.getCourt(),
+            opponentCourtSuit = getSuit(opponentCourt);
+        return numbered
+            .map((card) => {
+                const rank = getRank(card),
+                    suit = getSuit(card);
+                return rank * (suit === opponentCourtSuit ? 2 : 1);
+            })
+            .reduce((acc, num) => acc + num, 0);
+    }
+
+    #getFactor(hand) {
+        const opponentCourt = this.opponent.getCourt(),
+            opponentCourtSuit = getSuit(opponentCourt),
+            courtSuit = getSuit(this.getCourt(hand)),
+            factor =
+                courtSuit &&
+                opponentCourtSuit &&
+                courtSuit === opponentCourtSuit
+                    ? 2
+                    : 1;
+        return factor;
+    }
+
+    getCourt(hand) {
+        return getCourts(hand || this.hand.cards)[0];
+    }
+
+    /* END GET POINTS */
+
+    // determine best hand and play it automatically
     autoMove() {
         const sortNumRanksDescending = (a, b) => getRank(b) - getRank(a),
             courts = getCourts(this.#cards),
-            numbered = this.#cards
-                .filter((card) => !courts.includes(card))
-                .sort(sortNumRanksDescending),
+            numbered = getNumbered(this.#cards).sort(sortNumRanksDescending),
             filterer = ({ isRecovery, count }) =>
                 numbered
                     .filter((card) => {
@@ -73,134 +187,21 @@ export default class Player {
                 pusher(recoveryCards);
                 pusher(attackCards);
             }
-            hands.sort(
-                (a, b) =>
-                    Math.abs(this.#calculatePoints({ hand: b, court: b[0] })) -
-                    Math.abs(this.#calculatePoints({ hand: a, court: a[0] }))
-            );
+            hands.sort((a, b) => {
+                const getAbs = (hand) => Math.abs(this.#calculatePoints(hand));
+                return getAbs(b) - getAbs(a);
+            });
         }
         const hand = hands[0] || (numbered[0] && [numbered[0]]);
         hand ? this.setHand(hand) : this.drawSingleCardForTurn();
     }
 
-    // validates and plays hand, while making sure
-    // player holds at least 5 cards afterwards
-    setHand(hand) {
-        this.hand = this.#validateHand(hand) ? hand : null;
-        if (this.hand) {
-            this.#cards = this.#cards.filter((card) => !hand.includes(card));
-            while (!this.deck.isEmpty() && this.#cards.length < 5) {
-                this.#drawCard();
-            }
-            this.#playHand();
-            return true;
-        }
-    }
-
-    // see rules.txt for logic below
-    #validateHand(hand) {
-        if (!hand) {
-            // both hands will be null after a player draws card
-            // for turn, therefore go to next turn without alert
-            return;
-        }
-        if (!hand.length) {
-            alert("Please select some cards.");
-            return false;
-        }
-        const courts = getCourts(hand);
-        if (courts.length > 1) {
-            alert("Can only play one court card on each turn.");
-            return false;
-        }
-        const court = courts[0],
-            numbered = getNumbered({ hand, court });
-        if (
-            Object.entries(this.#courtCounts).find(([rank, count]) =>
-                this.#courtIsInvalid({ rank, count, court, numbered })
-            )
-        ) {
-            return false;
-        } else if (!court && numbered.length !== 1) {
-            alert("Can only play one card without a court card.");
-            return false;
-        }
-        if (
-            numbered.find((card) => getSuit(card) === "Hearts") &&
-            !this.#getIsRecovery(numbered)
-        ) {
-            alert(
-                "Numbered cards must be all hearts " +
-                    "OR a combination of the other suits."
-            );
-            return false;
-        }
-        return true;
-    }
-
-    #courtIsInvalid({ court, rank, numbered, count }) {
-        if (court?.includes(rank) && numbered.length !== count) {
-            alert(`A ${rank} must accompany ${count} cards.`);
-            return true;
-        }
-    }
-
-    #getIsRecovery(numbered) {
-        const suits = new Set(numbered.map(getSuit));
-        return suits.has("Hearts") && suits.size === 1;
-    }
-
-    #playHand() {
-        if (!this.hand) {
-            return false;
-        }
-        const { points, isRecovery } = this.#calculatePoints({
-            hand: this.hand,
-            court: this.getCourt(),
-        });
-        this.points = `${isRecovery ? "RECOVER" : "ATTACK"} ${points}`;
-        isRecovery ? (this.hp += points) : (this.opponent.hp += points);
-        if (this.opponent.hp < 0) {
-            alert(`${this.opponent.name} has no more HP! ${this.name} wins!`);
-            window.location.reload();
-        }
-    }
-
-    #calculatePoints({ hand, court }) {
-        const numbered = getNumbered({ hand, court }),
-            isRecovery = this.#getIsRecovery(numbered),
-            basePoints = this.#getBasePoints(numbered),
-            factor = this.#getFactor(),
-            points = (isRecovery ? 1 : -1) * (basePoints * factor);
-        return { points, isRecovery };
-    }
-
-    getCourt() {
-        return getCourts(this.hand)?.[0];
-    }
-
-    #getBasePoints(numbered) {
-        const opponentCourt = this.opponent.getCourt(),
-            opponentCourtSuit = getSuit(opponentCourt);
-        return numbered
-            .map((card) => {
-                const suit = getSuit(card),
-                    rank = getRank(card);
-                return rank * (suit === opponentCourtSuit ? 2 : 1);
-            })
-            .reduce((acc, num) => acc + num, 0);
-    }
-
-    #getFactor() {
-        const opponentCourt = this.opponent.getCourt(),
-            opponentCourtSuit = getSuit(opponentCourt),
-            courtSuit = getSuit(this.getCourt()),
-            factor =
-                courtSuit &&
-                opponentCourtSuit &&
-                courtSuit === opponentCourtSuit
-                    ? 2
-                    : 1;
-        return factor;
+    drawSingleCardForTurn() {
+        this.#drawCard();
+        // strategic matching of court's suit played
+        // on previous turn doesn't apply anymore,
+        // therefore reset both hands
+        this.setHand(null);
+        this.opponent.setHand(null);
     }
 }

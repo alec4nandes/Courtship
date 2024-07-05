@@ -45,6 +45,7 @@ async function startGame({ player1Name, player2Name, isAuto }) {
         displayDrawPileCount();
         for (const playerKey of playerKeys) {
             const player = players[playerKey];
+            // show hp
             document.querySelector(
                 `#${playerKey} .stats .score`
             ).innerHTML = `<h2>${player.hp}</h2>`;
@@ -68,7 +69,7 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                     .join("");
         }
         lastPlayerKey = getCurrentPlayerKey();
-        toggleDisabled();
+        toggleDisabled({ override: false });
     }
 
     function displayDrawPileCount() {
@@ -83,35 +84,21 @@ async function startGame({ player1Name, player2Name, isAuto }) {
             currentPlayer = players[currentPlayerKey],
             currentPlayerHand = sortHand(currentPlayer),
             lastPlayer = players[lastPlayerKey],
-            lastPlayerHand = sortHand(lastPlayer),
-            makePlayedCards = ({ cards, key }) => {
-                const html = cards
-                        .map(
-                            (card) =>
-                                `<div class="card">${getCardImg(card)}</div>`
-                        )
-                        .join(""),
-                    text = cards.length
-                        ? `
-                            <p class="played-text">
-                                <em>
-                                    Played Last Turn:
-                                    <strong>${players[key].points}</strong>
-                                </em>
-                            </p>
-                        `
-                        : "",
-                    isTextTop = key === playerKeys[1];
-                return isTextTop ? text + html : html + text;
-            };
-        document.querySelector(
-            `#${currentPlayerKey} .played .cards`
-        ).innerHTML = makePlayedCards({
+            lastPlayerHand = sortHand(lastPlayer);
+        const currentPlayerCardsElem = document.querySelector(
+                `#${currentPlayerKey} .played .cards`
+            ),
+            lastPlayerCardsElem = document.querySelector(
+                `#${lastPlayerKey} .played .cards`
+            );
+        currentPlayerCardsElem.innerHTML = makePlayedCards({
             cards: currentPlayerHand,
             key: currentPlayerKey,
         });
-        document.querySelector(`#${lastPlayerKey} .played .cards`).innerHTML =
-            makePlayedCards({ cards: lastPlayerHand, key: lastPlayerKey });
+        lastPlayerCardsElem.innerHTML = makePlayedCards({
+            cards: lastPlayerHand,
+            key: lastPlayerKey,
+        });
     }
 
     function getCurrentPlayerKey() {
@@ -120,11 +107,32 @@ async function startGame({ player1Name, player2Name, isAuto }) {
 
     function sortHand(player) {
         const court = player.getCourt(),
-            numbered =
-                getNumbered({ hand: player.hand, court })?.sort(
-                    (a, b) => getRank(b) - getRank(a)
-                ) || [];
+            numbered = getNumbered(player.hand.cards).sort(
+                (a, b) => getRank(b) - getRank(a)
+            );
         return [court, ...numbered].filter(Boolean);
+    }
+
+    function makePlayedCards({ cards, key }) {
+        const html = cards
+                .map((card) => `<div class="card">${getCardImg(card)}</div>`)
+                .join(""),
+            { points } = players[key].hand,
+            text = cards.length
+                ? `
+                    <p class="played-text">
+                        <em>
+                            Played Last Turn:
+                            <strong>
+                                ${points > 0 ? "RECOVER" : "ATTACK"}
+                                ${points}
+                            </strong>
+                        </em>
+                    </p>
+                `
+                : "",
+            isTextTop = key === playerKeys[1];
+        return isTextTop ? text + html : html + text;
     }
 
     function getCardImg(card) {
@@ -142,27 +150,28 @@ async function startGame({ player1Name, player2Name, isAuto }) {
             .map(({ value }) => value);
         const isSuccess = player.setHand(hand);
         isSuccess && displayPlayers();
-        isAuto && autoMove();
+        gameOver() || (isAuto && autoMove());
     }
 
-    function handleClickDrawCard({ e, player }) {
-        e.preventDefault();
-        player.drawSingleCardForTurn();
-        displayPlayers();
-        isAuto && autoMove();
-    }
-
-    function autoMove() {
-        if (lastPlayerKey === playerKeys[0]) {
+    function gameOver() {
+        const message = playerKeys
+            .map((playerKey) => players[playerKey].gameOverMessage)
+            .find((message) => message);
+        if (message) {
+            toggleDisabled({ override: true });
             setTimeout(() => {
-                players[getCurrentPlayerKey()].autoMove();
-                displayPlayers();
-            }, 3000);
+                alert(message);
+                document.querySelector("#draw-pile").innerHTML =
+                    "<p><button>new game</button></p>";
+                document.querySelector("#draw-pile button").onclick = () =>
+                    window.location.reload();
+            }, 1000);
+            return true;
         }
     }
 
-    function toggleDisabled() {
-        const isOpponentTurn = lastPlayerKey === playerKeys[0];
+    function toggleDisabled({ override }) {
+        const isOpponentTurn = override || lastPlayerKey === playerKeys[0];
         document.querySelector("#draw-card").disabled = isOpponentTurn;
         document.querySelector("#submit").disabled = isOpponentTurn;
         [
@@ -170,6 +179,23 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                 `#${playerKeys[0]} input[type="checkbox"]`
             ),
         ].forEach((elem) => (elem.disabled = isOpponentTurn));
+    }
+
+    function autoMove() {
+        if (lastPlayerKey === playerKeys[0]) {
+            setTimeout(() => {
+                players[getCurrentPlayerKey()].autoMove();
+                displayPlayers();
+                gameOver();
+            }, 3000);
+        }
+    }
+
+    function handleClickDrawCard({ e, player }) {
+        e.preventDefault();
+        player.drawSingleCardForTurn();
+        displayPlayers();
+        isAuto && autoMove();
     }
 }
 

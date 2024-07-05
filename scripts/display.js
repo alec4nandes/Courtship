@@ -30,53 +30,59 @@ async function startGame({ player1Name, player2Name, isAuto }) {
     // set handlers
     const userKey = playerKeys[0],
         formElem = document.querySelector(`#${userKey}`),
+        drawCardBtn = document.querySelector("#draw-card"),
         user = players[userKey];
     formElem.onsubmit = (e) => handleSubmitPlay({ e, player: user });
-    document.querySelector("#draw-card").onclick = (e) =>
-        handleClickDrawCard({ e, player: user });
+    drawCardBtn.onclick = (e) => handleClickDrawCard({ e, player: user });
     // set names
     for (const playerKey of playerKeys) {
-        document.querySelector(
-            `#${playerKey} .stats .name`
-        ).innerHTML = `<h2>${players[playerKey].name}</h2>`;
+        const nameElem = document.querySelector(`#${playerKey} .stats .name`);
+        nameElem.innerHTML = `<h2>${players[playerKey].name}</h2>`;
     }
 
     function displayPlayers() {
+        displayPlayerHpAndCards();
         displayDrawPileCount();
-        for (const playerKey of playerKeys) {
-            const player = players[playerKey];
-            // show hp
-            document.querySelector(
-                `#${playerKey} .stats .score`
-            ).innerHTML = `<h2>${player.hp}</h2>`;
-            document.querySelector(`#${playerKey} .play .cards`).innerHTML =
-                player
-                    .getCards()
-                    .map((card) =>
-                        card
-                            ? `
-                                <label class="card">
-                                    <input type="checkbox" value="${card}"/>
-                                    ${getCardImg(card)}
-                                </label>
-                            `
-                            : `
-                                <div class="card">
-                                    <img src="/assets/kings-corner-card-back-min.png" />
-                                </div>
-                            `
-                    )
-                    .join("");
-        }
+        displayRecentMoves();
         lastPlayerKey = getCurrentPlayerKey();
         toggleDisabled({ override: false });
     }
 
+    function displayPlayerHpAndCards() {
+        for (const playerKey of playerKeys) {
+            const player = players[playerKey],
+                scoreElem = document.querySelector(
+                    `#${playerKey} .stats .score`
+                ),
+                cardsElem = document.querySelector(
+                    `#${playerKey} .play .cards`
+                );
+            scoreElem.innerHTML = `<h2>${player.hp}</h2>`;
+            cardsElem.innerHTML = player
+                .getCards()
+                .map(makePlayerCard)
+                .join("");
+        }
+    }
+
+    function makePlayerCard(card) {
+        return card
+            ? `
+                <label class="card">
+                    <input type="checkbox" value="${card}"/>
+                    ${getCardImg(card)}
+                </label>
+            `
+            : `
+                <div class="card">
+                    <img src="/assets/kings-corner-card-back-min.png" />
+                </div>
+            `;
+    }
+
     function displayDrawPileCount() {
-        document.querySelector(
-            "#draw-pile"
-        ).innerHTML = `<p>${deck.deck.length} cards left in draw pile.</p>`;
-        displayRecentMoves();
+        const drawPileElem = document.querySelector("#draw-pile");
+        drawPileElem.innerHTML = `<p>${deck.deck.length} cards left in draw pile.</p>`;
     }
 
     function displayRecentMoves() {
@@ -161,24 +167,25 @@ async function startGame({ player1Name, player2Name, isAuto }) {
             toggleDisabled({ override: true });
             setTimeout(() => {
                 alert(message);
-                document.querySelector("#draw-pile").innerHTML =
-                    "<p><button>new game</button></p>";
-                document.querySelector("#draw-pile button").onclick = () =>
-                    window.location.reload();
+                const drawPileElem = document.querySelector("#draw-pile");
+                drawPileElem.innerHTML = "<p><button>new game</button></p>";
+                const newGameBtn = document.querySelector("#draw-pile button");
+                newGameBtn.onclick = () => window.location.reload();
             }, 1000);
             return true;
         }
     }
 
     function toggleDisabled({ override }) {
-        const isOpponentTurn = override || lastPlayerKey === playerKeys[0];
+        const isOpponentTurn = override || lastPlayerKey === playerKeys[0],
+            checkboxElems = [
+                ...document.querySelectorAll(
+                    `#${playerKeys[0]} input[type="checkbox"]`
+                ),
+            ];
+        checkboxElems.forEach((elem) => (elem.disabled = isOpponentTurn));
         document.querySelector("#draw-card").disabled = isOpponentTurn;
         document.querySelector("#submit").disabled = isOpponentTurn;
-        [
-            ...document.querySelectorAll(
-                `#${playerKeys[0]} input[type="checkbox"]`
-            ),
-        ].forEach((elem) => (elem.disabled = isOpponentTurn));
     }
 
     function autoMove() {

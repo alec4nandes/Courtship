@@ -141,6 +141,10 @@ export default class Player {
             .reduce((acc, num) => acc + num, 0);
     }
 
+    getCourt(hand) {
+        return getCourts(hand || this.hand.cards)[0];
+    }
+
     #getFactor(hand) {
         const opponentCourt = this.opponent.getCourt(),
             opponentCourtSuit = getSuit(opponentCourt),
@@ -152,10 +156,6 @@ export default class Player {
                     ? 2
                     : 1;
         return factor;
-    }
-
-    getCourt(hand) {
-        return getCourts(hand || this.hand.cards)[0];
     }
 
     /* END GET POINTS */

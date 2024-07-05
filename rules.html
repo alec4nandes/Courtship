@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Card Game Rules</title>
+        <link rel="stylesheet" href="/css/rules.css" />
+    </head>
+    <body>
+        <main>
+            <h1>Card Game Rules</h1>
+            <nav><a href="/">play game</a></nav>
+            <br />
+            <ul>
+                <li>Each player starts off with 60 HP and 5 cards</li>
+
+                <li>
+                    Each hand plays 1-4 numbered cards with an optional court
+                    card
+                </li>
+                <ul>
+                    <li>
+                        Hearts are recovery points, other suits are attack
+                        points
+                    </li>
+                    <li>Must play at least one numbered card</li>
+                    <ul>
+                        <li>
+                            Players cannot move if they have only court cards —
+                            they must pull another card
+                        </li>
+                    </ul>
+                    <li>
+                        More numbered cards are played alongside a court card.
+                        The rank of the court card determines the extra cards
+                    </li>
+                    <ul>
+                        <li>No court cards: 1 numbered card only</li>
+                        <li>Jack: 2 numbered cards</li>
+                        <li>Queen: 3 numbered cards</li>
+                        <li>King: 4 numbered cards</li>
+                    </ul>
+                    <li>Can only play one court card per turn</li>
+                    <li>
+                        Each player must have at least 5 cards at the start of
+                        every turn, unless the draw pile is exhausted
+                    </li>
+                    <li>
+                        Players can decide to draw without playing any cards
+                    </li>
+                </ul>
+
+                <li>
+                    Turns are for either recovery points, where the numbered
+                    cards are all Hearts, or attack points, where the numbered
+                    cards are not Hearts. A court card can always be any suit
+                </li>
+                <ul>
+                    <li>Recovery points return HP to the player</li>
+                    <li>Attack points reduce the HP of the opponent</li>
+                    <li>
+                        A turn can only be for one kind of point. No mixing
+                        Hearts with other suits in the numbered cards.
+                    </li>
+                </ul>
+
+                <li>Point calculation</li>
+                <ul>
+                    <li>
+                        Double a card’s points if it is same suit as court card
+                        just played by opponent
+                    </li>
+                    <li>
+                        Double total attack or recovery points if court card is
+                        same suit as a court card just played by opponent.
+                        Example:
+                    </li>
+                    <ul>
+                        <li>
+                            Opponent plays Jack of Clubs, 5 of Clubs, and 8 of
+                            Spades
+                        </li>
+                        <li>You take 5+8=13 points damage</li>
+                        <li>
+                            Then you play Queen of Clubs, 5 of Clubs, 7 of
+                            Diamonds, and 2 of Spades
+                        </li>
+                        <li>Opponent takes 2(5*2+7+2) = 38 points damage</li>
+                    </ul>
+                </ul>
+
+                <li>
+                    Play until someone runs out of HP, or cards are exhausted
+                    (highest HP wins)
+                </li>
+            </ul>
+        </main>
+    </body>
+</html>

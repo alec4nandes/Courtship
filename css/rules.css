@@ -1,0 +1,44 @@
+body {
+    background-color: #222;
+    color: #ccc;
+    margin: 80px 15px;
+    text-align: center;
+
+    a {
+        color: lightblue;
+
+        &:hover {
+            color: cyan;
+        }
+    }
+
+    main {
+        height: 100%;
+        max-width: 700px;
+        margin: auto;
+
+        & > ul {
+            font-size: 1.1rem;
+            padding-left: 15px;
+
+            & > li {
+                font-weight: bold;
+            }
+
+            & > ul > ul {
+                & > li {
+                    font-size: 0.95rem;
+                    font-style: italic;
+                }
+            }
+        }
+
+        ul {
+            text-align: left;
+
+            li {
+                margin: 10px 0;
+            }
+        }
+    }
+}

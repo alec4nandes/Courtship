@@ -31,7 +31,7 @@ async function startGame({ player1Name, player2Name, isAuto }) {
     for (const playerKey of playerKeys) {
         const player = players[playerKey],
             formElem = document.querySelector(`#${playerKey}`),
-            drawBtn = formElem.querySelector(".draw-card");
+            drawBtn = formElem.querySelector("#draw-card");
         formElem.onsubmit = (e) => handleSubmitPlay({ e, player });
         formElem.querySelector(
             `#${playerKey} .stats .name`
@@ -53,11 +53,11 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                     .map((card) =>
                         card
                             ? `
-                            <label class="card">
-                                <input type="checkbox" value="${card}"/>
-                                ${getCardImg(card)}
-                            </label>
-                        `
+                                <label class="card">
+                                    <input type="checkbox" value="${card}"/>
+                                    ${getCardImg(card)}
+                                </label>
+                            `
                             : `
                                 <div class="card">
                                     <img src="/assets/kings-corner-card-back-min.png" />
@@ -67,6 +67,7 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                     .join("");
         }
         lastPlayerKey = getCurrentPlayerKey();
+        toggleDisabled();
     }
 
     function displayDrawPileCount() {
@@ -79,11 +80,8 @@ async function startGame({ player1Name, player2Name, isAuto }) {
     function displayRecentMoves() {
         const currentPlayerKey = getCurrentPlayerKey(),
             currentPlayer = players[currentPlayerKey],
-            currentPlayerName = currentPlayer.name,
             currentPlayerHand = sortHand(currentPlayer),
-            currentPlayerPoints = currentPlayer.points,
             lastPlayer = players[lastPlayerKey],
-            lastPlayerName = lastPlayer.name,
             lastPlayerHand = sortHand(lastPlayer),
             makePlayedCards = ({ cards, key }) => {
                 const html = cards
@@ -93,7 +91,14 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                         )
                         .join(""),
                     text = cards.length
-                        ? `<p class="played-text"><em>Played Last Turn</em></p>`
+                        ? `
+                            <p class="played-text">
+                                <em>
+                                    Played Last Turn:
+                                    <strong>${players[key].points}</strong>
+                                </em>
+                            </p>
+                        `
                         : "",
                     isTextTop = key === playerKeys[1];
                 return isTextTop ? text + html : html + text;
@@ -153,6 +158,17 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                 displayPlayers();
             }, 3000);
         }
+    }
+
+    function toggleDisabled() {
+        const isOpponentTurn = lastPlayerKey === playerKeys[0];
+        document.querySelector("#draw-card").disabled = isOpponentTurn;
+        document.querySelector("#submit").disabled = isOpponentTurn;
+        [
+            ...document.querySelectorAll(
+                `#${playerKeys[0]} input[type="checkbox"]`
+            ),
+        ].forEach((elem) => (elem.disabled = isOpponentTurn));
     }
 }
 

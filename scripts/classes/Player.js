@@ -31,8 +31,9 @@ export default class Player {
     }
 
     #drawCard() {
-        !this.deck.isEmpty() &&
-            (this.#cards = [...this.#cards, this.deck.drawCard()]);
+        this.deck.isEmpty()
+            ? alert("No more cards in draw pile!")
+            : (this.#cards = [...this.#cards, this.deck.drawCard()]);
     }
 
     drawSingleCardForTurn() {
@@ -160,6 +161,10 @@ export default class Player {
         });
         this.points = `${isRecovery ? "RECOVER" : "ATTACK"} ${points}`;
         isRecovery ? (this.hp += points) : (this.opponent.hp += points);
+        if (this.opponent.hp < 0) {
+            alert(`${this.opponent.name} has no more HP! ${this.name} wins!`);
+            window.location.reload();
+        }
     }
 
     #calculatePoints({ hand, court }) {

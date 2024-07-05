@@ -1,0 +1,23 @@
+{
+    "name": "card-game",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "firebase": "./node_modules/.bin/firebase --",
+        "login": "npm run firebase login",
+        "init": "npm run firebase init",
+        "serve": "npm run firebase serve",
+        "deploy": "npm run firebase deploy",
+        "deploy-funcs": "./node_modules/.bin/firebase deploy --only functions",
+        "deploy-host": "./node_modules/.bin/firebase deploy --only hosting"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "firebase": "^10.12.3",
+        "firebase-tools": "^13.13.0"
+    }
+}

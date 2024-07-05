@@ -13,7 +13,7 @@ import { getNumbered, getRank } from "./misc.js";
 
 async function startGame({ player1Name, player2Name, isAuto }) {
     const deck = new Deck(),
-        playerKeys = ["player1", "player2"],
+        playerKeys = ["player", "opponent"],
         players = {
             [playerKeys[0]]: new Player({ name: player1Name, deck }),
             [playerKeys[1]]: new Player({
@@ -33,7 +33,9 @@ async function startGame({ player1Name, player2Name, isAuto }) {
             formElem = document.querySelector(`#${playerKey}`),
             drawBtn = formElem.querySelector(".draw-card");
         formElem.onsubmit = (e) => handleSubmitPlay({ e, player });
-        formElem.querySelector(".name").innerHTML = `<p>${player.name}</p>`;
+        formElem.querySelector(
+            `#${playerKey} .stats .name`
+        ).innerHTML = `<h2>${player.name}</h2>`;
         drawBtn &&
             (drawBtn.onclick = (e) => handleClickDrawCard({ e, player }));
     }
@@ -43,56 +45,48 @@ async function startGame({ player1Name, player2Name, isAuto }) {
         for (const playerKey of playerKeys) {
             const player = players[playerKey];
             document.querySelector(
-                `#${playerKey} .score`
-            ).innerHTML = `<p>${player.hp}</p>`;
-            document.querySelector(`#${playerKey} .inputs`).innerHTML = player
-                .getCards()
-                ?.map(
-                    (card) => `
-                            <label>
+                `#${playerKey} .stats .score`
+            ).innerHTML = `<h2>${player.hp}</h2>`;
+            document.querySelector(`#${playerKey} .play .cards`).innerHTML =
+                player
+                    .getCards()
+                    .map((card) =>
+                        card
+                            ? `
+                            <label class="card">
                                 <input type="checkbox" value="${card}"/>
                                 ${card}
                             </label>
                         `
-                )
-                .join("");
+                            : `<div class="card">hidden card</div>`
+                    )
+                    .join("");
         }
         lastPlayerKey = getCurrentPlayerKey();
     }
 
     function displayDrawPileCount() {
-        document.querySelector("#draw-pile").innerHTML = `
-            <p>
-                ${deck.deck.length} cards left in draw pile.
-                ${displayRecentMoves()}
-            </p>
-        `;
+        document.querySelector(
+            "#draw-pile"
+        ).innerHTML = `<p>${deck.deck.length} cards left in draw pile.</p>`;
+        displayRecentMoves();
     }
 
     function displayRecentMoves() {
-        const currentPlayer = players[getCurrentPlayerKey()],
-            otherName = currentPlayer.name,
-            otherHand = sortHand(currentPlayer).join(", "),
-            otherPoints = currentPlayer.points,
+        const currentPlayerKey = getCurrentPlayerKey(),
+            currentPlayer = players[currentPlayerKey],
+            currentPlayerName = currentPlayer.name,
+            currentPlayerHand = sortHand(currentPlayer),
+            currentPlayerPoints = currentPlayer.points,
             lastPlayer = players[lastPlayerKey],
             lastPlayerName = lastPlayer.name,
-            lastPlayerHand = sortHand(lastPlayer).join(", ");
-        return (
-            (otherHand
-                ? `
-                    <br/>${otherName} just played: ${otherHand}
-                    <br/><strong>${otherPoints}</strong>
-                `
-                : "") +
-            (lastPlayerHand
-                ? `
-                    <br/><em>
-                        (before that, ${lastPlayerName}
-                        played ${lastPlayerHand})
-                    </em>
-                `
-                : "")
-        );
+            lastPlayerHand = sortHand(lastPlayer),
+            makeCards = (cards) =>
+                cards.map((card) => `<div class="card">${card}</div>`).join("");
+        document.querySelector(`#${currentPlayerKey} .played`).innerHTML =
+            makeCards(currentPlayerHand);
+        document.querySelector(`#${lastPlayerKey} .played`).innerHTML =
+            makeCards(lastPlayerHand);
     }
 
     function getCurrentPlayerKey() {

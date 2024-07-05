@@ -25,7 +25,9 @@ export default class Player {
     */
 
     getCards() {
-        return this.#isHidden ? [] : this.#cards;
+        return this.#isHidden
+            ? new Array(this.#cards.length).fill(null)
+            : this.#cards;
     }
 
     #drawCard() {

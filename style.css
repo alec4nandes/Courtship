@@ -1,33 +1,112 @@
+html,
 body {
-    background-color: #222;
-    color: #eee;
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    margin: 0;
 
     #players {
-        text-align: center;
+        height: 100%;
+        overflow: auto;
 
-        form {
-            width: 160px;
-            margin: auto;
+        #player,
+        #opponent {
+            height: fit-content;
+            min-height: 45%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
 
-            .draw-card,
-            .inputs {
-                margin-bottom: 20px;
+            .stats {
+                width: 100%;
+                display: flex;
+
+                .name,
+                .score {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .name {
+                    flex: 1;
+                }
+
+                .score {
+                    flex: 1;
+                }
             }
 
-            .inputs {
+            .play {
                 display: flex;
+                align-items: center;
+                justify-content: center;
+                flex: 1;
                 flex-direction: column;
-                gap: 5px;
 
-                label {
-                    background-color: #333;
+                .cards {
                     display: flex;
-                    justify-content: left;
+                    flex: 1;
+                    align-items: center;
+                    justify-content: center;
+                    flex-wrap: wrap;
 
-                    &:has(input[disabled]) {
-                        opacity: 0.6;
+                    .card {
+                        height: 200px;
+                        width: 120px;
+                        border: 1px solid blue;
+
+                        &:has(input[type="checkbox"]:checked) {
+                            background-color: yellow;
+                        }
+
+                        input[type="checkbox"] {
+                            display: none;
+                        }
                     }
                 }
+            }
+
+            .played {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+
+                .card {
+                    height: 100px;
+                    width: 60px;
+                    border: 1px solid blue;
+                }
+            }
+        }
+
+        #draw-pile {
+            height: fit-content;
+            min-height: 10%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #player {
+            background-color: burlywood;
+            color: #222;
+
+            .played {
+                background-color: bisque;
+            }
+        }
+
+        #opponent {
+            background-color: #333;
+            color: #eee;
+
+            .played {
+                background-color: #555;
             }
         }
     }

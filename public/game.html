@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Courtship Card Game &mdash; Play</title>
+        <link rel="stylesheet" href="/css/game.css" />
+        <link rel="stylesheet" href="/css/menu.css" />
+    </head>
+    <body id="hide-before-load">
+        <div id="players">
+            <form id="player">
+                <div class="stats">
+                    <div class="name"></div>
+                    <div>
+                        <nav id="menu">
+                            <ul>
+                                <li>
+                                    <a href="/">Home</a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    <div class="score"></div>
+                </div>
+                <div class="play">
+                    <button id="draw-card">draw card</button>
+                    <div class="cards"></div>
+                    <button id="submit" type="submit">play selected</button>
+                </div>
+                <div class="played">
+                    <div class="cards"></div>
+                </div>
+            </form>
+            <div id="draw-pile"></div>
+            <div id="opponent">
+                <div class="played">
+                    <div class="cards"></div>
+                </div>
+                <div class="play">
+                    <div class="cards"></div>
+                </div>
+                <div class="stats">
+                    <div class="name"></div>
+                    <div class="rules"></div>
+                    <div class="score"></div>
+                </div>
+            </div>
+        </div>
+
+        <script src="/scripts/main.js"></script>
+        <script src="/scripts/game.js" type="module"></script>
+    </body>
+</html>

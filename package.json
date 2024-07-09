@@ -11,7 +11,8 @@
         "serve": "npm run firebase serve",
         "deploy": "npm run firebase deploy",
         "deploy-funcs": "./node_modules/.bin/firebase deploy --only functions",
-        "deploy-host": "./node_modules/.bin/firebase deploy --only hosting"
+        "deploy-host": "./node_modules/.bin/firebase deploy --only hosting",
+        "watch": "./node_modules/.bin/webpack watch"
     },
     "keywords": [],
     "author": "",
@@ -19,5 +20,9 @@
     "dependencies": {
         "firebase": "^10.12.3",
         "firebase-tools": "^13.13.0"
+    },
+    "devDependencies": {
+        "webpack": "^5.92.1",
+        "webpack-cli": "^5.1.4"
     }
 }

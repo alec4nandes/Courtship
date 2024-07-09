@@ -4,43 +4,27 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Courtship Card Game</title>
-        <link rel="stylesheet" href="/css/index.css" />
+        <link rel="stylesheet" href="/css/style.css" />
+        <link rel="stylesheet" href="/css/menu.css" />
     </head>
-    <body>
-        <div id="players">
-            <form id="player">
-                <div class="stats">
-                    <div class="name"></div>
-                    <div class="rules">
-                        <a href="/rules.html" target="_blank">rules</a>
-                    </div>
-                    <div class="score"></div>
-                </div>
-                <div class="play">
-                    <button id="draw-card">draw card</button>
-                    <div class="cards"></div>
-                    <button id="submit" type="submit">play selected</button>
-                </div>
-                <div class="played">
-                    <div class="cards"></div>
-                </div>
-            </form>
-            <div id="draw-pile"></div>
-            <div id="opponent">
-                <div class="played">
-                    <div class="cards"></div>
-                </div>
-                <div class="play">
-                    <div class="cards"></div>
-                </div>
-                <div class="stats">
-                    <div class="name"></div>
-                    <div class="rules"></div>
-                    <div class="score"></div>
-                </div>
-            </div>
-        </div>
+    <body id="hide-before-load">
+        <main>
+            <h1>Courtship Card Game</h1>
+            <nav id="menu">
+                <ul>
+                    <li>
+                        <a href="/game.html">Play Game</a>
+                    </li>
+                    <li>
+                        <a href="/rules.html">Rules</a>
+                    </li>
+                    <li>
+                        <button id="sign-out">Sign Out</button>
+                    </li>
+                </ul>
+            </nav>
+        </main>
 
-        <script src="/scripts/index.js" type="module"></script>
+        <script src="/scripts/main.js"></script>
     </body>
 </html>

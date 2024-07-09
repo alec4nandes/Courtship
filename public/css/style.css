@@ -5,6 +5,10 @@ body {
     text-align: center;
     text-wrap: pretty;
 
+    &#hide-before-load {
+        display: none;
+    }
+
     a {
         color: lightblue;
 
@@ -30,6 +34,18 @@ body {
                 & > li {
                     font-size: 0.95rem;
                     font-style: italic;
+                }
+            }
+        }
+
+        form#sign-in {
+            table {
+                margin: auto;
+
+                tr:not(:last-child) {
+                    td:first-child {
+                        text-align: right;
+                    }
                 }
             }
         }

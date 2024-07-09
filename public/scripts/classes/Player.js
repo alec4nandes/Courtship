@@ -4,8 +4,13 @@ export default class Player {
     #courtCounts = { Jack: 2, Queen: 3, King: 4 };
     #cards;
     #isHidden;
+    #emptyHand = (hasNotStarted) => ({
+        cards: [],
+        points: 0,
+        hasNotStarted,
+    });
     // holds info on last hand played
-    hand = { cards: [], points: 0 };
+    hand = this.#emptyHand(true);
     gameOverMessage = false;
 
     constructor({ name, deck, isHidden }) {
@@ -47,13 +52,7 @@ export default class Player {
         }
     }
 
-    // see rules.txt for logic below
     #validateHand(hand) {
-        if (!hand) {
-            // both hands will be null after a player draws card
-            // for turn, therefore go to next turn without alert
-            return;
-        }
         if (!hand.length) {
             alert("Please select some cards.");
             return false;
@@ -65,10 +64,7 @@ export default class Player {
         }
         const court = courts[0],
             numbered = getNumbered(hand);
-        if (this.#courtIsInvalid({ court, numbered })) {
-            return false;
-        } else if (!court && numbered.length !== 1) {
-            alert("Can only play one card without a court card.");
+        if (!this.#courtIsValid({ court, numbered })) {
             return false;
         }
         const numberedHasHearts = numbered.find(
@@ -76,24 +72,29 @@ export default class Player {
         );
         if (numberedHasHearts && !this.#getIsRecovery(numbered)) {
             alert(
-                "Numbered cards must be all hearts " +
-                    "OR a combination of the other suits."
+                "Numbered cards must be all recovery points (Hearts) " +
+                    "or all attack points (not Hearts)."
             );
             return false;
         }
         return true;
     }
 
-    #courtIsInvalid({ court, numbered }) {
+    #courtIsValid({ court, numbered }) {
         if (!court) {
-            return false;
+            if (numbered.length !== 1) {
+                alert("Can only play one card without a court card.");
+                return false;
+            }
+            return true;
         }
         const rank = getRank(court),
             count = this.#courtCounts[rank];
         if (numbered.length !== count) {
             alert(`A ${rank} must accompany ${count} cards.`);
-            return true;
+            return false;
         }
+        return true;
     }
 
     #getIsRecovery(numbered) {
@@ -200,8 +201,7 @@ export default class Player {
         this.#drawCard();
         // strategic matching of court's suit played
         // on previous turn doesn't apply anymore,
-        // therefore reset both hands
-        this.setHand(null);
-        this.opponent.setHand(null);
+        // therefore reset player's hand
+        this.hand = this.#emptyHand();
     }
 }

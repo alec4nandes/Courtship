@@ -19,19 +19,15 @@
                     card
                 </li>
                 <ul>
-                    <li>
-                        Hearts are recovery points, other suits are attack
-                        points
-                    </li>
-                    <li>Must play at least one numbered card</li>
+                    <li>Each hand must play at least one numbered card</li>
                     <ul>
                         <li>
-                            Players cannot move if they have only court cards —
-                            they must pull another card
+                            Players with only court cards cannot play a hand.
+                            They must pull another card
                         </li>
                     </ul>
                     <li>
-                        More numbered cards are played alongside a court card.
+                        A court card calls for more numbered cards in a hand.
                         The rank of the court card determines the extra cards
                     </li>
                     <ul>
@@ -40,13 +36,16 @@
                         <li>Queen: 3 numbered cards</li>
                         <li>King: 4 numbered cards</li>
                     </ul>
-                    <li>Can only play one court card per turn</li>
+                    <li>Players can only play one court card per turn</li>
                     <li>
-                        Each player must have at least 5 cards at the start of
-                        every turn, unless the draw pile is exhausted
+                        Players must have at least 5 cards at the start of each
+                        turn. If a player has less than 5 cards after playing
+                        their hand, they must draw cards until they have 5,
+                        unless the draw pile is exhausted
                     </li>
                     <li>
-                        Players can decide to draw without playing any cards
+                        For each turn, players can either draw a card or play a
+                        hand
                     </li>
                 </ul>
 
@@ -67,31 +66,33 @@
                 <li>Point calculation</li>
                 <ul>
                     <li>
-                        Double a card’s points if it is same suit as court card
-                        just played by opponent
+                        Double a card's points if it is the same suit as a court
+                        card just played by the opponent
                     </li>
                     <li>
-                        Double total attack or recovery points if court card is
-                        same suit as a court card just played by opponent.
-                        Example:
+                        Double the total attack or recovery points if the
+                        player's court card is the same suit as a court card
+                        just played by the opponent. Example:
                     </li>
                     <ul>
                         <li>
-                            Opponent plays Jack of Clubs, 5 of Clubs, and 8 of
-                            Spades
+                            Opponent plays Jack of Clubs, 8 of Spades, and 5 of
+                            Clubs
                         </li>
-                        <li>You take 5+8=13 points damage</li>
+                        <li>You take 8 + 5 = 13 points damage</li>
                         <li>
-                            Then you play Queen of Clubs, 5 of Clubs, 7 of
-                            Diamonds, and 2 of Spades
+                            Then you play Queen of Clubs, 7 of Diamonds, 4 of
+                            Clubs, and 2 of Spades
                         </li>
-                        <li>Opponent takes 2(5*2+7+2) = 38 points damage</li>
+                        <li>
+                            Opponent takes 2(7 + 4*2 + 2) = 34 points damage
+                        </li>
                     </ul>
                 </ul>
 
                 <li>
-                    Play until someone runs out of HP, or cards are exhausted
-                    (highest HP wins)
+                    Play until someone runs out of HP, or the draw pile and
+                    hands are exhausted (highest HP wins)
                 </li>
             </ul>
         </main>

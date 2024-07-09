@@ -24,6 +24,11 @@ async function startGame({ player1Name, player2Name, isAuto }) {
         };
     players[playerKeys[0]].setOpponent(players[playerKeys[1]]);
     players[playerKeys[1]].setOpponent(players[playerKeys[0]]);
+    // set names
+    for (const playerKey of playerKeys) {
+        const nameElem = document.querySelector(`#${playerKey} .stats .name`);
+        nameElem.innerHTML = `<h2>${players[playerKey].name}</h2>`;
+    }
     // setup DOM
     let lastPlayerKey = playerKeys[0];
     displayPlayers();
@@ -34,11 +39,6 @@ async function startGame({ player1Name, player2Name, isAuto }) {
         user = players[userKey];
     formElem.onsubmit = (e) => handleSubmitPlay({ e, player: user });
     drawCardBtn.onclick = (e) => handleClickDrawCard({ e, player: user });
-    // set names
-    for (const playerKey of playerKeys) {
-        const nameElem = document.querySelector(`#${playerKey} .stats .name`);
-        nameElem.innerHTML = `<h2>${players[playerKey].name}</h2>`;
-    }
 
     function displayPlayers() {
         displayPlayerHpAndCards();
@@ -123,20 +123,27 @@ async function startGame({ player1Name, player2Name, isAuto }) {
         const html = cards
                 .map((card) => `<div class="card">${getCardImg(card)}</div>`)
                 .join(""),
-            { points } = players[key].hand,
-            text = cards.length
-                ? `
+            { hand, name } = players[key],
+            { points, hasNotStarted } = hand,
+            text = `
                     <p class="played-text">
                         <em>
-                            Played Last Turn:
-                            <strong>
-                                ${points > 0 ? "RECOVER" : "ATTACK"}
-                                ${points}
-                            </strong>
+                        ${
+                            points
+                                ? `
+                                    ${name}'s last hand:
+                                    <strong>
+                                        ${points > 0 ? "RECOVER" : "ATTACK"}
+                                        ${points}
+                                    </strong>
+                                `
+                                : hasNotStarted
+                                ? `${name} hasn't yet played a hand.`
+                                : `${name} drew a card last turn.`
+                        }
                         </em>
                     </p>
-                `
-                : "",
+                `,
             isTextTop = key === playerKeys[1];
         return isTextTop ? text + html : html + text;
     }

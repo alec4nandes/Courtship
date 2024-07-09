@@ -3,6 +3,7 @@ body {
     color: #ccc;
     margin: 80px 15px;
     text-align: center;
+    text-wrap: pretty;
 
     a {
         color: lightblue;

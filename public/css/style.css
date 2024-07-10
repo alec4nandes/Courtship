@@ -38,13 +38,16 @@ body {
             }
         }
 
-        form#sign-in {
-            table {
-                margin: auto;
+        form {
+            &#sign-in,
+            &#sign-up {
+                table {
+                    margin: auto;
 
-                tr:not(:last-child) {
-                    td:first-child {
-                        text-align: right;
+                    tr:not(:last-child) {
+                        td:first-child {
+                            text-align: right;
+                        }
                     }
                 }
             }

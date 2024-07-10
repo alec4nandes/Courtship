@@ -1,5 +1,5 @@
 import { getNumbered, getRank } from "./misc.js";
-import { cpu, getGame, updateGame } from "./user-games.js";
+import { cpu, getGame, getUsername, updateGame } from "./user-games.js";
 import Deck from "./classes/Deck.js";
 import Player from "./classes/Player.js";
 
@@ -53,7 +53,11 @@ async function startGame(user) {
     for (const playerKey of playerKeys) {
         const nameElem = document.querySelector(`#${playerKey} .stats .name`);
         // TODO: get username
-        nameElem.innerHTML = `<h2>${players[playerKey].name}</h2>`;
+        nameElem.innerHTML = `
+            <h2>
+                ${await getUsername(players[playerKey].name)}
+            </h2>
+        `;
     }
     // setup DOM
     let lastPlayerKey = playerKeys[0];
@@ -69,7 +73,7 @@ async function startGame(user) {
     async function displayPlayers() {
         displayPlayerHpAndCards();
         displayDrawPileCount();
-        displayRecentMoves();
+        await displayRecentMoves();
         lastPlayerKey = getCurrentPlayerKey();
         toggleDisabled({ override: false });
         await update();
@@ -111,7 +115,7 @@ async function startGame(user) {
         drawPileElem.innerHTML = `<p>${deck.cards.length} cards left in draw pile.</p>`;
     }
 
-    function displayRecentMoves() {
+    async function displayRecentMoves() {
         const currentPlayerKey = getCurrentPlayerKey(),
             currentPlayer = players[currentPlayerKey],
             currentPlayerHand = sortHand(currentPlayer),
@@ -123,11 +127,11 @@ async function startGame(user) {
             lastPlayerCardsElem = document.querySelector(
                 `#${lastPlayerKey} .played .cards`
             );
-        currentPlayerCardsElem.innerHTML = makePlayedCards({
+        currentPlayerCardsElem.innerHTML = await makePlayedCards({
             cards: currentPlayerHand,
             key: currentPlayerKey,
         });
-        lastPlayerCardsElem.innerHTML = makePlayedCards({
+        lastPlayerCardsElem.innerHTML = await makePlayedCards({
             cards: lastPlayerHand,
             key: lastPlayerKey,
         });
@@ -145,27 +149,28 @@ async function startGame(user) {
         return [court, ...numbered].filter(Boolean);
     }
 
-    function makePlayedCards({ cards, key }) {
+    async function makePlayedCards({ cards, key }) {
         const html = cards
                 .map((card) => `<div class="card">${getCardImg(card)}</div>`)
                 .join(""),
             { hand, name } = players[key],
             { points, hasNotStarted } = hand,
+            username = await getUsername(name),
             text = `
                     <p class="played-text">
                         <em>
                         ${
                             points
                                 ? `
-                                    ${name}'s last hand:
+                                    ${username}'s last hand:
                                     <strong>
                                         ${points > 0 ? "RECOVER" : "ATTACK"}
                                         ${points}
                                     </strong>
                                 `
                                 : hasNotStarted
-                                ? `${name} hasn't yet played a hand.`
-                                : `${name} drew a card last turn.`
+                                ? `${username} hasn't yet played a hand.`
+                                : `${username} drew a card last turn.`
                         }
                         </em>
                     </p>

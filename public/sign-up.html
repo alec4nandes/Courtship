@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Courtship Card Game &mdash; Sign In</title>
+        <title>Courtship Card Game &mdash; Sign Up</title>
         <link rel="stylesheet" href="/css/style.css" />
         <link rel="stylesheet" href="/css/menu.css" />
     </head>
@@ -13,19 +13,30 @@
             <nav id="menu">
                 <ul>
                     <li>
-                        <a href="/sign-up.html">Sign Up</a>
+                        <a href="/sign-in.html">Sign In</a>
                     </li>
                     <li>
                         <a href="/rules.html">Rules</a>
                     </li>
                 </ul>
             </nav>
-            <form id="sign-in">
+            <form id="sign-up">
                 <table>
                     <tr>
                         <td>email:</td>
                         <td>
                             <input type="email" name="email" required />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>username:</td>
+                        <td>
+                            <input
+                                type="text"
+                                name="username"
+                                minlength="3"
+                                maxlength="18"
+                            />
                         </td>
                     </tr>
                     <tr>
@@ -36,7 +47,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <button type="submit">sign in</button>
+                            <button type="submit">sign up</button>
                         </td>
                     </tr>
                 </table>

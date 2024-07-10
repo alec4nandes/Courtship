@@ -7,7 +7,6 @@ export default class Player {
         points: 0,
         hasNotStarted: !!hasNotStarted, // no undefined in Firestore
     });
-    gameOverMessage = false;
 
     constructor({ name, game, deck }) {
         this.name = name;
@@ -104,9 +103,6 @@ export default class Player {
         // positive points increase player's hp,
         // negative points decrease opponent's hp
         points > 0 ? (this.hp += points) : (this.opponent.hp += points);
-        if (this.opponent.hp <= 0) {
-            this.gameOverMessage = `${this.opponent.name} has no more HP! ${this.name} wins!`;
-        }
         return points;
     }
 

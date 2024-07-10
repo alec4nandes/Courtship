@@ -1,5 +1,11 @@
 import { getNumbered, getRank } from "./misc.js";
-import { cpu, getGame, getUsername, updateGame } from "./user-games.js";
+import {
+    cpu,
+    getGame,
+    getUsername,
+    handleStartGame,
+    updateGame,
+} from "./user-games.js";
 import Deck from "./classes/Deck.js";
 import Player from "./classes/Player.js";
 
@@ -77,6 +83,7 @@ async function startGame(user) {
         lastPlayerKey = getCurrentPlayerKey();
         toggleDisabled({ override: false });
         await update();
+        await gameOver();
     }
 
     function displayPlayerHpAndCards() {
@@ -195,24 +202,7 @@ async function startGame(user) {
         const isSuccess = player.setHand(hand);
         if (isSuccess) {
             await displayPlayers();
-            gameOver() || (isAuto && autoMove());
-        }
-    }
-
-    function gameOver() {
-        const message = playerKeys
-            .map((playerKey) => players[playerKey].gameOverMessage)
-            .find((message) => message);
-        if (message) {
-            toggleDisabled({ override: true });
-            setTimeout(() => {
-                alert(message);
-                const drawPileElem = document.querySelector("#draw-pile");
-                drawPileElem.innerHTML = "<p><button>new game</button></p>";
-                const newGameBtn = document.querySelector("#draw-pile button");
-                newGameBtn.onclick = () => window.location.reload();
-            }, 1000);
-            return true;
+            isAuto && autoMove();
         }
     }
 
@@ -237,12 +227,32 @@ async function startGame(user) {
         });
     }
 
+    async function gameOver() {
+        const values = Object.values(players),
+            isGameOver = !!values.find(({ hp }) => hp && hp <= 0);
+        if (isGameOver) {
+            const winner = await getUsername(
+                    values.find(({ hp }) => hp > 0).name
+                ),
+                message = `Game over! ${winner} won!`;
+            toggleDisabled({ override: true });
+            alert(message);
+            const drawPileElem = document.querySelector("#draw-pile");
+            drawPileElem.innerHTML = "<p><button>new game</button></p>";
+            const newGameBtn = drawPileElem.querySelector("button");
+            newGameBtn.onclick = () =>
+                handleStartGame({
+                    playerId1: players[playerKeys[0]].name,
+                    playerId2: players[playerKeys[1]].name,
+                });
+        }
+    }
+
     function autoMove() {
         if (lastPlayerKey === playerKeys[0]) {
             setTimeout(async () => {
                 players[getCurrentPlayerKey()].autoMove();
                 await displayPlayers();
-                gameOver();
             }, 3000);
         }
     }

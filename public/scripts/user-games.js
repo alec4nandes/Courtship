@@ -2,11 +2,9 @@ import { db } from "./database.js";
 import {
     arrayRemove,
     arrayUnion,
-    collection,
     deleteDoc,
     doc,
     getDoc,
-    getDocs,
     setDoc,
     updateDoc,
 } from "firebase/firestore";
@@ -49,6 +47,9 @@ async function getGames(playerId) {
 }
 
 async function getGame(gameId) {
+    if (!gameId) {
+        return {};
+    }
     const game = await getDoc(doc(db, "games", gameId));
     return game.data() || {};
 }

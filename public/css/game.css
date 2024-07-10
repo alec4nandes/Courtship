@@ -7,6 +7,8 @@ body {
     height: 100%;
     margin: 0;
     text-align: center;
+    text-size-adjust: none;
+    -webkit-text-size-adjust: none;
 
     &#hide-before-load {
         display: none;
@@ -167,6 +169,28 @@ body {
 
             .played {
                 background-color: #555;
+            }
+        }
+    }
+}
+
+@media only screen and (max-width: 400px) {
+    .play {
+        .cards {
+            gap: 6px !important;
+
+            .card {
+                height: 90px !important;
+                width: 60px !important;
+            }
+        }
+    }
+
+    .played {
+        .cards {
+            .card {
+                height: 60px !important;
+                width: 40px !important;
             }
         }
     }

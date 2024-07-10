@@ -83,7 +83,7 @@ async function startGame(user) {
         lastPlayerKey = getCurrentPlayerKey();
         toggleDisabled({ override: false });
         await update();
-        await gameOver();
+        return await gameOver();
     }
 
     function displayPlayerHpAndCards() {
@@ -201,8 +201,8 @@ async function startGame(user) {
             .map(({ value }) => value);
         const isSuccess = player.setHand(hand);
         if (isSuccess) {
-            await displayPlayers();
-            isAuto && autoMove();
+            const isGameOver = await displayPlayers();
+            !isGameOver && isAuto && autoMove();
         }
     }
 
@@ -230,8 +230,8 @@ async function startGame(user) {
     async function gameOver() {
         const values = Object.values(players),
             isGameOver =
-                // a player is below 0 HP
-                !!values.find(({ hp }) => !isNaN(hp) && hp <= 0) ||
+                // a player is at or below 0 HP
+                !!values.find(({ hp }) => hp <= 0) ||
                 // or the draw pile is exhausted and
                 // the current player has no numbered cards
                 (deck.isEmpty() &&
@@ -256,6 +256,7 @@ async function startGame(user) {
                     playerId1: players[playerKeys[0]].name,
                     playerId2: players[playerKeys[1]].name,
                 });
+            return true;
         }
     }
 
@@ -271,8 +272,8 @@ async function startGame(user) {
     async function handleClickDrawCard({ e, player }) {
         e.preventDefault();
         if (player.drawSingleCardForTurn()) {
-            await displayPlayers();
-            isAuto && autoMove();
+            const isGameOver = await displayPlayers();
+            !isGameOver && isAuto && autoMove();
         }
     }
 }

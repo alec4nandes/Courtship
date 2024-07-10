@@ -11,7 +11,7 @@ export default class Player {
     constructor({ name, game, deck }) {
         this.name = name;
         this.deck = deck;
-        this.hp = game?.hp || 60;
+        this.hp = !isNaN(game?.hp) ? game.hp : 60;
         // holds info on last hand played
         this.hand = game?.hand || this.#emptyHand(true);
         this.cards = game?.cards || deck.firstDeal();

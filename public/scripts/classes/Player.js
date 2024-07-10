@@ -93,9 +93,12 @@ export default class Player {
     }
 
     #drawCard() {
-        this.deck.isEmpty()
-            ? alert("No more cards in draw pile!")
-            : (this.cards = [...this.cards, this.deck.drawCard()]);
+        if (this.deck.isEmpty()) {
+            alert("No more cards in draw pile!");
+            return false;
+        }
+        this.cards = [...this.cards, this.deck.drawCard()];
+        return true;
     }
 
     #playHand(hand) {
@@ -161,7 +164,7 @@ export default class Player {
                     })
                     .slice(0, count),
             hands = [];
-        if (numbered.length / courts.length < 0.3) {
+        if (!this.deck.isEmpty() && numbered.length / courts.length < 0.3) {
             this.drawSingleCardForTurn();
             return;
         }
@@ -185,10 +188,11 @@ export default class Player {
     }
 
     drawSingleCardForTurn() {
-        this.#drawCard();
+        const success = this.#drawCard();
         // strategic matching of court's suit played
         // on previous turn doesn't apply anymore,
         // therefore reset player's hand
-        this.hand = this.#emptyHand();
+        success && (this.hand = this.#emptyHand());
+        return success;
     }
 }

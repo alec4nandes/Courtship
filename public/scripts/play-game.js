@@ -270,9 +270,10 @@ async function startGame(user) {
 
     async function handleClickDrawCard({ e, player }) {
         e.preventDefault();
-        player.drawSingleCardForTurn();
-        await displayPlayers();
-        isAuto && autoMove();
+        if (player.drawSingleCardForTurn()) {
+            await displayPlayers();
+            isAuto && autoMove();
+        }
     }
 }
 

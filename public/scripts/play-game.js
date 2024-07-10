@@ -229,12 +229,23 @@ async function startGame(user) {
 
     async function gameOver() {
         const values = Object.values(players),
-            isGameOver = !!values.find(({ hp }) => hp && hp <= 0);
+            isGameOver =
+                // a player is below 0 HP
+                !!values.find(({ hp }) => !isNaN(hp) && hp <= 0) ||
+                // or the draw pile is exhausted and
+                // the current player has no numbered cards
+                (deck.isEmpty() &&
+                    !getNumbered(players[getCurrentPlayerKey()].cards).length);
         if (isGameOver) {
-            const winner = await getUsername(
-                    values.find(({ hp }) => hp > 0).name
-                ),
-                message = `Game over! ${winner} won!`;
+            const hpSorted = values.sort((a, b) => b.hp - a.hp),
+                [a, b] = hpSorted,
+                { name } =
+                    // if ending HPs are equal, then it's a tie
+                    a.hp === b.hp ? {} : values.find(({ hp }) => hp > 0) || a,
+                winner = name && (await getUsername(name)),
+                message = winner
+                    ? `Game over! ${winner} won!`
+                    : "Game over! It's a tie!";
             toggleDisabled({ override: true });
             alert(message);
             const drawPileElem = document.querySelector("#draw-pile");

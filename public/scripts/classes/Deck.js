@@ -1,21 +1,25 @@
 export default class Deck {
-    constructor() {
-        const numbered = new Array(10)
-                .fill(1)
-                .map((n, i) => (i ? n + i : "Ace")),
-            courts = ["Jack", "Queen", "King"],
-            ranks = [...numbered, ...courts],
-            suits = ["Hearts", "Spades", "Diamonds", "Clubs"],
-            deck = suits
-                .map((suit) => ranks.map((rank) => `${rank} of ${suit}`))
-                .flat(Infinity);
-        this.deck = deck;
+    constructor(cards) {
+        if (cards) {
+            this.cards = cards;
+        } else {
+            const numbered = new Array(10)
+                    .fill(1)
+                    .map((n, i) => (i ? n + i : "Ace")),
+                courts = ["Jack", "Queen", "King"],
+                ranks = [...numbered, ...courts],
+                suits = ["Hearts", "Spades", "Diamonds", "Clubs"],
+                cards = suits
+                    .map((suit) => ranks.map((rank) => `${rank} of ${suit}`))
+                    .flat(Infinity);
+            this.cards = cards;
+        }
     }
 
     drawCard() {
-        const randomIndex = ~~(Math.random() * this.deck.length),
-            card = this.deck[randomIndex];
-        this.deck.splice(randomIndex, 1);
+        const randomIndex = ~~(Math.random() * this.cards.length),
+            card = this.cards[randomIndex];
+        this.cards.splice(randomIndex, 1);
         return card;
     }
 
@@ -28,6 +32,6 @@ export default class Deck {
     }
 
     isEmpty() {
-        return this.deck.length === 0;
+        return this.cards.length === 0;
     }
 }

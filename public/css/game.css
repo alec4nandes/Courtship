@@ -8,6 +8,10 @@ body {
     margin: 0;
     text-align: center;
 
+    &#hide-before-load {
+        display: none;
+    }
+
     button {
         height: 40px;
         width: 200px;

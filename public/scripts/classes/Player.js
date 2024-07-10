@@ -2,23 +2,20 @@ import { getCourts, getNumbered, getRank, getSuit } from "../misc.js";
 
 export default class Player {
     #courtCounts = { Jack: 2, Queen: 3, King: 4 };
-    #cards;
-    #isHidden;
     #emptyHand = (hasNotStarted) => ({
         cards: [],
         points: 0,
-        hasNotStarted,
+        hasNotStarted: !!hasNotStarted, // no undefined in Firestore
     });
-    // holds info on last hand played
-    hand = this.#emptyHand(true);
     gameOverMessage = false;
 
-    constructor({ name, deck, isHidden }) {
+    constructor({ name, game, deck }) {
         this.name = name;
         this.deck = deck;
-        this.hp = 60;
-        this.#cards = deck.firstDeal();
-        this.#isHidden = isHidden;
+        this.hp = game?.hp || 60;
+        // holds info on last hand played
+        this.hand = game?.hand || this.#emptyHand(true);
+        this.cards = game?.cards || deck.firstDeal();
     }
 
     /*
@@ -32,18 +29,12 @@ export default class Player {
         this.opponent = player;
     }
 
-    getCards() {
-        return this.#isHidden
-            ? new Array(this.#cards.length).fill(null)
-            : this.#cards;
-    }
-
     // validates and plays hand, while making sure
     // player holds at least 5 cards afterwards
     setHand(hand) {
         if (this.#validateHand(hand)) {
-            this.#cards = this.#cards.filter((card) => !hand.includes(card));
-            while (!this.deck.isEmpty() && this.#cards.length < 5) {
+            this.cards = this.cards.filter((card) => !hand.includes(card));
+            while (!this.deck.isEmpty() && this.cards.length < 5) {
                 this.#drawCard();
             }
             const points = this.#playHand(hand);
@@ -105,7 +96,7 @@ export default class Player {
     #drawCard() {
         this.deck.isEmpty()
             ? alert("No more cards in draw pile!")
-            : (this.#cards = [...this.#cards, this.deck.drawCard()]);
+            : (this.cards = [...this.cards, this.deck.drawCard()]);
     }
 
     #playHand(hand) {
@@ -164,8 +155,8 @@ export default class Player {
     // determine best hand and play it automatically
     autoMove() {
         const sortNumRanksDescending = (a, b) => getRank(b) - getRank(a),
-            courts = getCourts(this.#cards),
-            numbered = getNumbered(this.#cards).sort(sortNumRanksDescending),
+            courts = getCourts(this.cards),
+            numbered = getNumbered(this.cards).sort(sortNumRanksDescending),
             filterer = ({ isRecovery, count }) =>
                 numbered
                     .filter((card) => {

@@ -1,6 +1,7 @@
+import { getNumbered, getRank } from "./misc.js";
+import { cpu, getGame, updateGame } from "./user-games.js";
 import Deck from "./classes/Deck.js";
 import Player from "./classes/Player.js";
-import { getNumbered, getRank } from "./misc.js";
 
 /*
     Gameplay:
@@ -11,41 +12,67 @@ import { getNumbered, getRank } from "./misc.js";
         * DOM setup: display elements & add handlers
 */
 
-async function startGame({ player1Name, player2Name, isAuto }) {
-    const deck = new Deck(),
-        playerKeys = ["player", "opponent"],
+function getSearchParam(param) {
+    const params = new URLSearchParams(document.location.search);
+    return params.get(param);
+}
+
+async function startGame(user) {
+    const id = getSearchParam("id"),
+        game = await getGame(id);
+    let ids = Object.keys(game).filter((key) => key !== "deck"),
+        deck,
+        players;
+    const isAuto = ids.includes(cpu),
+        playerKeys = ["player", "opponent"];
+    if (ids.includes(user.email)) {
+        ids = [user.email, ids.find((id) => id !== user.email)];
+        deck = new Deck(game.deck);
         players = {
-            [playerKeys[0]]: new Player({ name: player1Name, deck }),
+            [playerKeys[0]]: new Player({
+                name: ids[0],
+                game: game[ids[0]],
+                deck,
+            }),
             [playerKeys[1]]: new Player({
-                name: player2Name,
+                name: ids[1],
+                game: game[ids[1]],
                 deck,
                 isHidden: true,
             }),
         };
-    players[playerKeys[0]].setOpponent(players[playerKeys[1]]);
-    players[playerKeys[1]].setOpponent(players[playerKeys[0]]);
+        players[playerKeys[0]].setOpponent(players[playerKeys[1]]);
+        players[playerKeys[1]].setOpponent(players[playerKeys[0]]);
+        document.querySelector("#hide-before-load").style.display = "block";
+    } else {
+        alert("You don't have access to this game. Check the URL.");
+        window.location.href = window.location.origin;
+    }
+
     // set names
     for (const playerKey of playerKeys) {
         const nameElem = document.querySelector(`#${playerKey} .stats .name`);
+        // TODO: get username
         nameElem.innerHTML = `<h2>${players[playerKey].name}</h2>`;
     }
     // setup DOM
     let lastPlayerKey = playerKeys[0];
-    displayPlayers();
+    await displayPlayers();
     // set handlers
     const userKey = playerKeys[0],
         formElem = document.querySelector(`#${userKey}`),
         drawCardBtn = document.querySelector("#draw-card"),
-        user = players[userKey];
-    formElem.onsubmit = (e) => handleSubmitPlay({ e, player: user });
-    drawCardBtn.onclick = (e) => handleClickDrawCard({ e, player: user });
+        player = players[userKey];
+    formElem.onsubmit = (e) => handleSubmitPlay({ e, player });
+    drawCardBtn.onclick = (e) => handleClickDrawCard({ e, player });
 
-    function displayPlayers() {
+    async function displayPlayers() {
         displayPlayerHpAndCards();
         displayDrawPileCount();
         displayRecentMoves();
         lastPlayerKey = getCurrentPlayerKey();
         toggleDisabled({ override: false });
+        await update();
     }
 
     function displayPlayerHpAndCards() {
@@ -58,15 +85,14 @@ async function startGame({ player1Name, player2Name, isAuto }) {
                     `#${playerKey} .play .cards`
                 );
             scoreElem.innerHTML = `<h2>${player.hp}</h2>`;
-            cardsElem.innerHTML = player
-                .getCards()
-                .map(makePlayerCard)
+            cardsElem.innerHTML = player.cards
+                .map((card) => makePlayerCard({ card, id: player.name }))
                 .join("");
         }
     }
 
-    function makePlayerCard(card) {
-        return card
+    function makePlayerCard({ card, id }) {
+        return id === user.email
             ? `
                 <label class="card">
                     <input type="checkbox" value="${card}"/>
@@ -82,7 +108,7 @@ async function startGame({ player1Name, player2Name, isAuto }) {
 
     function displayDrawPileCount() {
         const drawPileElem = document.querySelector("#draw-pile");
-        drawPileElem.innerHTML = `<p>${deck.deck.length} cards left in draw pile.</p>`;
+        drawPileElem.innerHTML = `<p>${deck.cards.length} cards left in draw pile.</p>`;
     }
 
     function displayRecentMoves() {
@@ -156,14 +182,16 @@ async function startGame({ player1Name, player2Name, isAuto }) {
         return card.replaceAll(" ", "_").toLowerCase() + "-min.jpg";
     }
 
-    function handleSubmitPlay({ e, player }) {
+    async function handleSubmitPlay({ e, player }) {
         e.preventDefault();
         const hand = [...e.target.querySelectorAll(`input[type="checkbox"]`)]
             .filter(({ checked }) => checked)
             .map(({ value }) => value);
         const isSuccess = player.setHand(hand);
-        isSuccess && displayPlayers();
-        gameOver() || (isAuto && autoMove());
+        if (isSuccess) {
+            await displayPlayers();
+            gameOver() || (isAuto && autoMove());
+        }
     }
 
     function gameOver() {
@@ -195,20 +223,29 @@ async function startGame({ player1Name, player2Name, isAuto }) {
         document.querySelector("#submit").disabled = isOpponentTurn;
     }
 
+    async function update() {
+        await updateGame({
+            id,
+            player1: players[playerKeys[0]],
+            player2: players[playerKeys[1]],
+            deck,
+        });
+    }
+
     function autoMove() {
         if (lastPlayerKey === playerKeys[0]) {
-            setTimeout(() => {
+            setTimeout(async () => {
                 players[getCurrentPlayerKey()].autoMove();
-                displayPlayers();
+                await displayPlayers();
                 gameOver();
             }, 3000);
         }
     }
 
-    function handleClickDrawCard({ e, player }) {
+    async function handleClickDrawCard({ e, player }) {
         e.preventDefault();
         player.drawSingleCardForTurn();
-        displayPlayers();
+        await displayPlayers();
         isAuto && autoMove();
     }
 }

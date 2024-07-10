@@ -4,6 +4,8 @@ import {
     signInWithEmailAndPassword,
     signOut,
 } from "firebase/auth";
+import { cpu, displayGames, handleStartGame } from "./user-games.js";
+import { startGame } from "./play-game.js";
 
 setHandlers();
 setSignInListener();
@@ -29,16 +31,28 @@ async function handleSignIn(e) {
 }
 
 function setSignInListener() {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
         const pathName = "/sign-in.html",
-            isSignIn = window.location.href.includes(pathName);
+            isSignIn = window.location.href.includes(pathName),
+            isGame = window.location.href.includes("/game.html");
         if (user && isSignIn) {
             window.location.href = window.location.origin + "/index.html";
         } else if (!user && !isSignIn) {
             // redirect to user sign in, unless already there
             window.location.href = window.location.origin + pathName;
-        } else {
+        } else if (!isGame) {
             document.querySelector("#hide-before-load").style.display = "block";
+        }
+        if (user) {
+            await displayGames(user);
+            const startGameBtn = document.querySelector("#start-game");
+            startGameBtn &&
+                (startGameBtn.onclick = () =>
+                    handleStartGame({
+                        playerId1: user.email,
+                        playerId2: cpu,
+                    }));
+            isGame && (await startGame(user));
         }
     });
 }

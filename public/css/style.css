@@ -57,5 +57,13 @@ body {
                 margin: 10px 0;
             }
         }
+
+        #games {
+            ul {
+                width: fit-content;
+                margin: auto;
+                padding: 0;
+            }
+        }
     }
 }

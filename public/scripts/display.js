@@ -59,11 +59,15 @@ async function displayRecentMoves({ playerKeys, lastPlayerKey, players }) {
         );
     currentPlayerCardsElem.innerHTML = await makePlayedCards({
         cards: currentPlayerHand,
+        players,
         key: currentPlayerKey,
+        playerKeys,
     });
     lastPlayerCardsElem.innerHTML = await makePlayedCards({
         cards: lastPlayerHand,
+        players,
         key: lastPlayerKey,
+        playerKeys,
     });
 }
 
@@ -79,7 +83,7 @@ function sortHand(player) {
     return [court, ...numbered].filter(Boolean);
 }
 
-async function makePlayedCards({ cards, key }) {
+async function makePlayedCards({ cards, players, key, playerKeys }) {
     const html = cards
             .map((card) => `<div class="card">${getCardImg(card)}</div>`)
             .join(""),

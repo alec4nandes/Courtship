@@ -1,16 +1,11 @@
-import { getCurrentPlayerKey } from "./database.js";
+import { getCurrentPlayerKey } from "./display.js";
 
-function setHandlers({
-    playerKeys,
-    players,
-    displayPlayers,
-    isAuto,
-    lastPlayerKey,
-}) {
+function setHandlers({ playerKeys, players, displayPlayers, isAuto, state }) {
     const userKey = playerKeys[0],
         formElem = document.querySelector(`#${userKey}`),
         drawCardBtn = document.querySelector("#draw-card"),
         player = players[userKey],
+        { lastPlayerKey } = state,
         params = {
             player,
             displayPlayers,
@@ -39,7 +34,14 @@ async function handleSubmitPlay({
     const isSuccess = player.setHand(hand);
     if (isSuccess) {
         const isGameOver = await displayPlayers();
-        !isGameOver && autoMove({ isAuto, lastPlayerKey, playerKeys, players });
+        !isGameOver &&
+            autoMove({
+                isAuto,
+                lastPlayerKey,
+                playerKeys,
+                players,
+                displayPlayers,
+            });
     }
 }
 
@@ -55,11 +57,24 @@ async function handleClickDrawCard({
     e.preventDefault();
     if (player.drawSingleCardForTurn()) {
         const isGameOver = await displayPlayers();
-        !isGameOver && autoMove({ isAuto, lastPlayerKey, playerKeys, players });
+        !isGameOver &&
+            autoMove({
+                isAuto,
+                lastPlayerKey,
+                playerKeys,
+                players,
+                displayPlayers,
+            });
     }
 }
 
-function autoMove({ isAuto, lastPlayerKey, playerKeys, players }) {
+function autoMove({
+    isAuto,
+    lastPlayerKey,
+    playerKeys,
+    players,
+    displayPlayers,
+}) {
     if (isAuto && lastPlayerKey === playerKeys[0]) {
         setTimeout(async () => {
             players[

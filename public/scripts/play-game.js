@@ -30,27 +30,32 @@ import Player from "./classes/Player.js";
 async function startGame(user) {
     const verified = await verifyGame(user);
     if (verified) {
-        const { game, ids, isAuto } = verified,
-            { playerKeys, deck, players } = getPlayersAndDeck({ game, ids });
+        const { gameId, game, ids } = verified,
+            { playerKeys, deck, players } = getPlayersAndDeck({ game, ids }),
+            isAuto = ids.includes(cpu),
+            state = { lastPlayerKey: playerKeys[1] };
         displayNames({ playerKeys, players });
-        let lastPlayerKey = playerKeys[0];
         await displayPlayers();
         setHandlers({
             playerKeys,
             players,
             displayPlayers,
             isAuto,
-            lastPlayerKey,
+            state,
         });
         document.querySelector("#hide-before-load").style.display = "block";
 
         async function displayPlayers() {
             displayPlayerHpAndCards({ playerKeys, players, user });
             displayDrawPileCount(deck);
+            const { lastPlayerKey } = state;
             await displayRecentMoves({ playerKeys, lastPlayerKey, players });
-            lastPlayerKey = getCurrentPlayerKey({ playerKeys, lastPlayerKey });
+            state.lastPlayerKey = getCurrentPlayerKey({
+                playerKeys,
+                lastPlayerKey,
+            });
             toggleDisabled({ override: false, lastPlayerKey, playerKeys });
-            await update({ players, playerKeys, deck });
+            await update({ gameId, players, playerKeys, deck });
             return await gameOver({ players, deck, playerKeys, lastPlayerKey });
         }
     }
@@ -61,9 +66,8 @@ async function verifyGame(user) {
         game = await getGame(gameId);
     let ids = Object.keys(game).filter((key) => key !== "deck");
     if (ids.includes(user.email)) {
-        const isAuto = ids.includes(cpu);
         ids = [user.email, ids.find((id) => id !== user.email)];
-        return { game, ids, isAuto };
+        return { gameId, game, ids };
     } else {
         alert("You don't have access to this game. Check the URL.");
         window.location.href = window.location.origin;
@@ -96,9 +100,9 @@ function getPlayersAndDeck({ game, ids }) {
     return { playerKeys, deck, players };
 }
 
-async function update({ players, playerKeys, deck }) {
+async function update({ gameId, players, playerKeys, deck }) {
     await updateGame({
-        id,
+        gameId,
         player1: players[playerKeys[0]],
         player2: players[playerKeys[1]],
         deck,

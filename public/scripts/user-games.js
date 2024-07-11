@@ -144,9 +144,9 @@ function updateGameHelper({ player1, player2, deck }) {
     };
 }
 
-async function updateGame({ id, player1, player2, deck }) {
+async function updateGame({ gameId, player1, player2, deck }) {
     await setDoc(
-        doc(db, "games", id),
+        doc(db, "games", gameId),
         updateGameHelper({ player1, player2, deck })
     );
 }

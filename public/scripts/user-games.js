@@ -54,6 +54,15 @@ async function getGame(gameId) {
     return game.data() || {};
 }
 
+async function getUsername(name) {
+    const d = await getDoc(doc(db, "users", name));
+    if (d.exists()) {
+        const { username } = d.data();
+        return username;
+    }
+    return name;
+}
+
 async function handleStartGame({ playerId1, playerId2 }) {
     // only one game between two players
     const games = await getGames(playerId1),
@@ -140,15 +149,6 @@ async function updateGame({ id, player1, player2, deck }) {
         doc(db, "games", id),
         updateGameHelper({ player1, player2, deck })
     );
-}
-
-async function getUsername(name) {
-    const d = await getDoc(doc(db, "users", name));
-    if (d.exists()) {
-        const { username } = d.data();
-        return username;
-    }
-    return name;
 }
 
 export { cpu, displayGames, getGame, getUsername, handleStartGame, updateGame };

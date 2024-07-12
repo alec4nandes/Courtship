@@ -36,31 +36,30 @@ async function startGame(user) {
             { deck, players } = getPlayersAndDeck({ game, playerIds }),
             isAuto = playerIds.includes(cpu),
             isOpponentStart = turn !== user.email,
-            // first call of displayPlayers() will toggle
+            // first call of displayAndCheckGameOver() will toggle
             // lastPlayerId to whoever's turn it isn't
             state = { lastPlayerId: turn };
         displayNames({ playerIds, players });
-        await displayPlayers();
+        const isGameOver = await displayAndCheckGameOver();
         setHandlers({
             playerIds,
             players,
-            displayPlayers,
+            displayAndCheckGameOver,
             isAuto,
             state,
         });
-        if (isOpponentStart) {
-            toggleDisabled({ override: true });
+        isOpponentStart &&
+            !isGameOver &&
             autoMove({
                 isAuto,
-                lastPlayerId: state.lastPlayerId,
+                state,
                 playerIds,
                 players,
-                displayPlayers,
+                displayAndCheckGameOver,
             });
-        }
         document.querySelector("#hide-before-load").style.display = "block";
 
-        async function displayPlayers() {
+        async function displayAndCheckGameOver() {
             displayPlayerHpAndCards({ playerIds, players, user });
             displayDrawPileCount(deck);
             let { lastPlayerId } = state;
@@ -166,8 +165,8 @@ async function gameOver({ players, deck, playerIds, lastPlayerId }) {
                 playerId1: players[playerIds[0]].name,
                 playerId2: players[playerIds[1]].name,
             });
-        return true;
     }
+    return isGameOver;
 }
 
 export { startGame };

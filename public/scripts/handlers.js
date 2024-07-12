@@ -1,12 +1,18 @@
 import { getCurrentPlayerKey } from "./display.js";
 
-function setHandlers({ playerIds, players, displayPlayers, isAuto, state }) {
+function setHandlers({
+    playerIds,
+    players,
+    displayAndCheckGameOver,
+    isAuto,
+    state,
+}) {
     const formElem = document.querySelector(`#player`),
         drawCardBtn = document.querySelector("#draw-card"),
         player = players[playerIds[0]],
         params = {
             player,
-            displayPlayers,
+            displayAndCheckGameOver,
             isAuto,
             state,
             playerIds,
@@ -19,7 +25,7 @@ function setHandlers({ playerIds, players, displayPlayers, isAuto, state }) {
 async function handleSubmitPlay({
     e,
     player,
-    displayPlayers,
+    displayAndCheckGameOver,
     isAuto,
     state,
     playerIds,
@@ -31,15 +37,14 @@ async function handleSubmitPlay({
         .map(({ value }) => value);
     const isSuccess = player.setHand(hand);
     if (isSuccess) {
-        const isGameOver = await displayPlayers(),
-            { lastPlayerId } = state;
+        const isGameOver = await displayAndCheckGameOver();
         !isGameOver &&
             autoMove({
                 isAuto,
-                lastPlayerId,
+                state,
                 playerIds,
                 players,
-                displayPlayers,
+                displayAndCheckGameOver,
             });
     }
 }
@@ -47,7 +52,7 @@ async function handleSubmitPlay({
 async function handleClickDrawCard({
     e,
     player,
-    displayPlayers,
+    displayAndCheckGameOver,
     isAuto,
     state,
     playerIds,
@@ -55,32 +60,32 @@ async function handleClickDrawCard({
 }) {
     e.preventDefault();
     if (player.drawSingleCardForTurn()) {
-        const isGameOver = await displayPlayers(),
-            { lastPlayerId } = state;
+        const isGameOver = await displayAndCheckGameOver();
         !isGameOver &&
             autoMove({
                 isAuto,
-                lastPlayerId,
+                state,
                 playerIds,
                 players,
-                displayPlayers,
+                displayAndCheckGameOver,
             });
     }
 }
 
 function autoMove({
     isAuto,
-    lastPlayerId,
+    state,
     playerIds,
     players,
-    displayPlayers,
+    displayAndCheckGameOver,
 }) {
+    const { lastPlayerId } = state;
     if (isAuto && lastPlayerId === playerIds[0]) {
         setTimeout(async () => {
             players[
                 getCurrentPlayerKey({ playerIds, lastPlayerId })
             ].autoMove();
-            await displayPlayers();
+            await displayAndCheckGameOver();
         }, 3000);
     }
 }

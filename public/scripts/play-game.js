@@ -2,6 +2,7 @@ import { getNumbered } from "./misc.js";
 import {
     cpu,
     getGame,
+    getPlayersFromGameData,
     getUsername,
     handleStartGame,
     updateGame,
@@ -14,7 +15,7 @@ import {
     getCurrentPlayerKey,
     toggleDisabled,
 } from "./display.js";
-import { setHandlers } from "./handlers.js";
+import { setHandlers, autoMove } from "./handlers.js";
 import Deck from "./classes/Deck.js";
 import Player from "./classes/Player.js";
 
@@ -30,33 +31,56 @@ import Player from "./classes/Player.js";
 async function startGame(user) {
     const verified = await verifyGame(user);
     if (verified) {
-        const { gameId, game, ids } = verified,
-            { playerKeys, deck, players } = getPlayersAndDeck({ game, ids }),
-            isAuto = ids.includes(cpu),
-            state = { lastPlayerKey: playerKeys[1] };
-        displayNames({ playerKeys, players });
+        const { gameId, game, playerIds } = verified,
+            { turn } = game,
+            { deck, players } = getPlayersAndDeck({ game, playerIds }),
+            isAuto = playerIds.includes(cpu),
+            isOpponentStart = turn !== user.email,
+            // first call of displayPlayers() will toggle
+            // lastPlayerId to whoever's turn it isn't
+            state = { lastPlayerId: turn };
+        displayNames({ playerIds, players });
         await displayPlayers();
         setHandlers({
-            playerKeys,
+            playerIds,
             players,
             displayPlayers,
             isAuto,
             state,
         });
+        if (isOpponentStart) {
+            toggleDisabled({ override: true });
+            autoMove({
+                isAuto,
+                lastPlayerId: state.lastPlayerId,
+                playerIds,
+                players,
+                displayPlayers,
+            });
+        }
         document.querySelector("#hide-before-load").style.display = "block";
 
         async function displayPlayers() {
-            displayPlayerHpAndCards({ playerKeys, players, user });
+            displayPlayerHpAndCards({ playerIds, players, user });
             displayDrawPileCount(deck);
-            const { lastPlayerKey } = state;
-            await displayRecentMoves({ playerKeys, lastPlayerKey, players });
-            state.lastPlayerKey = getCurrentPlayerKey({
-                playerKeys,
-                lastPlayerKey,
+            let { lastPlayerId } = state;
+            await displayRecentMoves({ playerIds, lastPlayerId, players });
+            state.lastPlayerId = getCurrentPlayerKey({
+                playerIds,
+                lastPlayerId,
             });
-            toggleDisabled({ override: false, lastPlayerKey, playerKeys });
-            await update({ gameId, players, playerKeys, deck });
-            return await gameOver({ players, deck, playerKeys, lastPlayerKey });
+            ({ lastPlayerId } = state);
+            toggleDisabled({ override: false, lastPlayerId, playerIds });
+            const { name: turn } =
+                players[getCurrentPlayerKey({ playerIds, lastPlayerId })];
+            await update({
+                gameId,
+                players,
+                playerIds,
+                deck,
+                turn,
+            });
+            return await gameOver({ players, deck, playerIds, lastPlayerId });
         }
     }
 }
@@ -64,10 +88,10 @@ async function startGame(user) {
 async function verifyGame(user) {
     const gameId = getSearchParam("id"),
         game = await getGame(gameId);
-    let ids = Object.keys(game).filter((key) => key !== "deck");
-    if (ids.includes(user.email)) {
-        ids = [user.email, ids.find((id) => id !== user.email)];
-        return { gameId, game, ids };
+    let playerIds = getPlayersFromGameData(game);
+    if (playerIds.includes(user.email)) {
+        playerIds = [user.email, playerIds.find((id) => id !== user.email)];
+        return { gameId, game, playerIds };
     } else {
         alert("You don't have access to this game. Check the URL.");
         window.location.href = window.location.origin;
@@ -79,67 +103,68 @@ function getSearchParam(param) {
     return params.get(param);
 }
 
-function getPlayersAndDeck({ game, ids }) {
-    const playerKeys = ["player", "opponent"],
-        deck = new Deck(game.deck),
+function getPlayersAndDeck({ game, playerIds }) {
+    const deck = new Deck(game.deck),
         players = {
-            [playerKeys[0]]: new Player({
-                name: ids[0],
-                game: game[ids[0]],
+            [playerIds[0]]: new Player({
+                name: playerIds[0],
+                game: game[playerIds[0]],
                 deck,
             }),
-            [playerKeys[1]]: new Player({
-                name: ids[1],
-                game: game[ids[1]],
+            [playerIds[1]]: new Player({
+                name: playerIds[1],
+                game: game[playerIds[1]],
                 deck,
+                // is opponent
                 isHidden: true,
             }),
         };
-    players[playerKeys[0]].setOpponent(players[playerKeys[1]]);
-    players[playerKeys[1]].setOpponent(players[playerKeys[0]]);
-    return { playerKeys, deck, players };
+    players[playerIds[0]].setOpponent(players[playerIds[1]]);
+    players[playerIds[1]].setOpponent(players[playerIds[0]]);
+    return { deck, players };
 }
 
-async function update({ gameId, players, playerKeys, deck }) {
+async function update({ gameId, players, playerIds, deck, turn }) {
     await updateGame({
         gameId,
-        player1: players[playerKeys[0]],
-        player2: players[playerKeys[1]],
+        player1: players[playerIds[0]],
+        player2: players[playerIds[1]],
         deck,
+        turn,
     });
 }
 
-async function gameOver({ players, deck, playerKeys, lastPlayerKey }) {
+async function gameOver({ players, deck, playerIds, lastPlayerId }) {
     const values = Object.values(players),
+        isBelowZero = !!values.find(({ hp }) => hp <= 0),
+        currentPlayerKey = getCurrentPlayerKey({ playerIds, lastPlayerId }),
+        { cards } = players[currentPlayerKey],
+        currentPlayerNumbered = getNumbered(cards),
         isGameOver =
             // a player is at or below 0 HP
-            !!values.find(({ hp }) => hp <= 0) ||
+            isBelowZero ||
             // or the draw pile is exhausted and
             // the current player has no numbered cards
-            (deck.isEmpty() &&
-                !getNumbered(
-                    players[getCurrentPlayerKey({ playerKeys, lastPlayerKey })]
-                        .cards
-                ).length);
+            (deck.isEmpty() && !currentPlayerNumbered.length);
     if (isGameOver) {
-        const hpSorted = values.sort((a, b) => b.hp - a.hp),
+        const hpSorted = values.toSorted((a, b) => b.hp - a.hp),
             [a, b] = hpSorted,
             { name } =
                 // if ending HPs are equal, then it's a tie
-                a.hp === b.hp ? {} : values.find(({ hp }) => hp > 0) || a,
+                a.hp === b.hp ? {} : a,
             winner = name && (await getUsername(name)),
             message = winner
                 ? `Game over! ${winner} won!`
                 : "Game over! It's a tie!";
-        toggleDisabled({ override: true, lastPlayerKey, playerKeys });
+        toggleDisabled({ override: true, lastPlayerId, playerIds });
         alert(message);
         const drawPileElem = document.querySelector("#draw-pile");
         drawPileElem.innerHTML = "<p><button>new game</button></p>";
         const newGameBtn = drawPileElem.querySelector("button");
         newGameBtn.onclick = () =>
             handleStartGame({
-                playerId1: players[playerKeys[0]].name,
-                playerId2: players[playerKeys[1]].name,
+                playerId1: players[playerIds[0]].name,
+                playerId2: players[playerIds[1]].name,
             });
         return true;
     }

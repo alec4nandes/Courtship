@@ -21,9 +21,9 @@ async function displayGames(user) {
                 await Promise.all(
                     games.map(async (gameId) => {
                         const game = await getGame(gameId),
-                            opponent = Object.keys(game)
-                                .filter((key) => key !== "deck")
-                                .find((key) => key !== user.email);
+                            opponent = getPlayersFromGameData(game).find(
+                                (id) => id !== user.email
+                            );
                         return `
                             <li>
                                 <a href="/game.html?id=${gameId}">
@@ -38,6 +38,11 @@ async function displayGames(user) {
             ? `<ul>${listItems}</ul>`
             : "<p><em>No games in progress.</em></p>";
     }
+}
+
+function getPlayersFromGameData(game) {
+    const nonPlayerKeys = ["deck", "turn"];
+    return Object.keys(game).filter((id) => !nonPlayerKeys.includes(id));
 }
 
 async function getGames(playerId) {
@@ -66,36 +71,31 @@ async function getUsername(name) {
 async function handleStartGame({ playerId1, playerId2 }) {
     // only one game between two players
     const games = await getGames(playerId1),
-        [oldId] = (
-            await Promise.all(
-                games.map(async (game) => [game, await getGame(game)])
-            )
-        ).find(([, value]) => Object.keys(value).includes(playerId2)),
-        editGameIdsHelper = async ({ playerId, func, id }) => {
-            const docRef = doc(db, "users", playerId),
-                d = await getDoc(docRef);
-            d.exists() &&
-                (await updateDoc(docRef, {
-                    games: func(id),
-                }));
-        },
-        editGameIds = async ({ func, id }) => {
+        gameEntries = await Promise.all(
+            games.map(async (gameId) => [gameId, await getGame(gameId)])
+        ),
+        [oldId] = gameEntries.length
+            ? gameEntries.find(([, game]) =>
+                  Object.keys(game).includes(playerId2)
+              )
+            : [],
+        editUserGameIds = async ({ func, id }) => {
             for (const playerId of [playerId1, playerId2]) {
-                await editGameIdsHelper({ playerId, func, id });
+                await editUserGameId({ playerId, func, id });
             }
         };
     if (oldId) {
         // remove old id from db
         await deleteDoc(doc(db, "games", oldId));
-        await editGameIds({ func: arrayRemove, id: oldId });
+        await editUserGameIds({ func: arrayRemove, id: oldId });
     }
     // create new game
-    const id = await getId(),
+    const id = await getNewGameId(),
         game = createGame({ playerId1, playerId2 });
     try {
         // add id to db
         await setDoc(doc(db, "games", id), game);
-        await editGameIds({ func: arrayUnion, id });
+        await editUserGameIds({ func: arrayUnion, id });
         window.location.href = window.location.origin + `/game.html?id=${id}`;
     } catch (err) {
         console.error(err);
@@ -103,7 +103,16 @@ async function handleStartGame({ playerId1, playerId2 }) {
     }
 }
 
-async function getId() {
+async function editUserGameId({ playerId, func, id }) {
+    const docRef = doc(db, "users", playerId),
+        d = await getDoc(docRef);
+    d.exists() &&
+        (await updateDoc(docRef, {
+            games: func(id),
+        }));
+}
+
+async function getNewGameId() {
     let started, d, id;
     while (!started || d.exists()) {
         started = true;
@@ -132,23 +141,34 @@ function createGame({ playerId1, playerId2 }) {
     return updateGameHelper({ player1, player2, deck });
 }
 
-function updateGameHelper({ player1, player2, deck }) {
+function updateGameHelper({ player1, player2, deck, turn }) {
     const updatePlayer = (player) => {
-        const { cards, hand, hp } = player;
-        return { cards, hand, hp };
-    };
+            const { cards, hand, hp } = player;
+            return { cards, hand, hp };
+        },
+        playerIds = [player1.name, player2.name];
     return {
         [player1.name]: updatePlayer(player1),
         [player2.name]: updatePlayer(player2),
         deck: deck.cards,
+        // set random player for first turn
+        turn: turn || playerIds[~~(Math.random() * playerIds.length)],
     };
 }
 
-async function updateGame({ gameId, player1, player2, deck }) {
+async function updateGame({ gameId, player1, player2, deck, turn }) {
     await setDoc(
         doc(db, "games", gameId),
-        updateGameHelper({ player1, player2, deck })
+        updateGameHelper({ player1, player2, deck, turn })
     );
 }
 
-export { cpu, displayGames, getGame, getUsername, handleStartGame, updateGame };
+export {
+    cpu,
+    displayGames,
+    getGame,
+    getPlayersFromGameData,
+    getUsername,
+    handleStartGame,
+    updateGame,
+};

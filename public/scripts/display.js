@@ -1,23 +1,36 @@
 import { getNumbered, getRank } from "./misc.js";
 import { getUsername } from "./user-games.js";
 
-async function displayNames({ playerKeys, players }) {
-    for (const playerKey of playerKeys) {
-        const nameElem = document.querySelector(`#${playerKey} .stats .name`);
+async function displayNames({ playerIds, players }) {
+    for (let i = 0; i < playerIds.length; i++) {
+        const nameElem = document.querySelector(
+                `#${getClassName(i)} .stats .name`
+            ),
+            playerId = playerIds[i];
         // TODO: get username
         nameElem.innerHTML = `
             <h2>
-                ${await getUsername(players[playerKey].name)}
+                ${await getUsername(players[playerId].name)}
             </h2>
         `;
     }
 }
 
-function displayPlayerHpAndCards({ playerKeys, players, user }) {
-    for (const playerKey of playerKeys) {
-        const player = players[playerKey],
-            scoreElem = document.querySelector(`#${playerKey} .stats .score`),
-            cardsElem = document.querySelector(`#${playerKey} .play .cards`);
+function getClassName(i) {
+    const isOpponent = !!i;
+    return isOpponent ? "opponent" : "player";
+}
+
+function displayPlayerHpAndCards({ playerIds, players, user }) {
+    for (let i = 0; i < playerIds.length; i++) {
+        const playerId = playerIds[i],
+            player = players[playerId],
+            scoreElem = document.querySelector(
+                `#${getClassName(i)} .stats .score`
+            ),
+            cardsElem = document.querySelector(
+                `#${getClassName(i)} .play .cards`
+            );
         scoreElem.innerHTML = `<h2>${player.hp}</h2>`;
         cardsElem.innerHTML = player.cards
             .map((card) => makePlayerCard({ id: player.name, user, card }))
@@ -45,34 +58,35 @@ function displayDrawPileCount(deck) {
     drawPileElem.innerHTML = `<p>${deck.cards.length} cards left in draw pile.</p>`;
 }
 
-async function displayRecentMoves({ playerKeys, lastPlayerKey, players }) {
-    const currentPlayerKey = getCurrentPlayerKey({ playerKeys, lastPlayerKey }),
+async function displayRecentMoves({ playerIds, lastPlayerId, players }) {
+    const currentPlayerKey = getCurrentPlayerKey({ playerIds, lastPlayerId }),
         currentPlayer = players[currentPlayerKey],
         currentPlayerHand = sortHand(currentPlayer),
-        lastPlayer = players[lastPlayerKey],
-        lastPlayerHand = sortHand(lastPlayer);
-    const currentPlayerCardsElem = document.querySelector(
-            `#${currentPlayerKey} .played .cards`
+        lastPlayer = players[lastPlayerId],
+        lastPlayerHand = sortHand(lastPlayer),
+        currentIsOpponent = currentPlayerKey == playerIds[1],
+        currentPlayerCardsElem = document.querySelector(
+            `#${currentIsOpponent ? "opponent" : "player"} .played .cards`
         ),
         lastPlayerCardsElem = document.querySelector(
-            `#${lastPlayerKey} .played .cards`
+            `#${currentIsOpponent ? "player" : "opponent"} .played .cards`
         );
     currentPlayerCardsElem.innerHTML = await makePlayedCards({
         cards: currentPlayerHand,
         players,
         key: currentPlayerKey,
-        playerKeys,
+        playerIds,
     });
     lastPlayerCardsElem.innerHTML = await makePlayedCards({
         cards: lastPlayerHand,
         players,
-        key: lastPlayerKey,
-        playerKeys,
+        key: lastPlayerId,
+        playerIds,
     });
 }
 
-function getCurrentPlayerKey({ playerKeys, lastPlayerKey }) {
-    return playerKeys.find((playerKey) => playerKey !== lastPlayerKey);
+function getCurrentPlayerKey({ playerIds, lastPlayerId }) {
+    return playerIds.find((playerKey) => playerKey !== lastPlayerId);
 }
 
 function sortHand(player) {
@@ -83,7 +97,7 @@ function sortHand(player) {
     return [court, ...numbered].filter(Boolean);
 }
 
-async function makePlayedCards({ cards, players, key, playerKeys }) {
+async function makePlayedCards({ cards, players, key, playerIds }) {
     const html = cards
             .map((card) => `<div class="card">${getCardImg(card)}</div>`)
             .join(""),
@@ -109,7 +123,7 @@ async function makePlayedCards({ cards, players, key, playerKeys }) {
                     </em>
                 </p>
             `,
-        isTextTop = key === playerKeys[1];
+        isTextTop = key === playerIds[1];
     return isTextTop ? text + html : html + text;
 }
 
@@ -121,12 +135,10 @@ function getCardFileName(card) {
     return card.replaceAll(" ", "_").toLowerCase() + "-min.jpg";
 }
 
-function toggleDisabled({ override, lastPlayerKey, playerKeys }) {
-    const isOpponentTurn = override || lastPlayerKey === playerKeys[0],
+function toggleDisabled({ override, lastPlayerId, playerIds }) {
+    const isOpponentTurn = override || lastPlayerId === playerIds[0],
         checkboxElems = [
-            ...document.querySelectorAll(
-                `#${playerKeys[0]} input[type="checkbox"]`
-            ),
+            ...document.querySelectorAll(`#player input[type="checkbox"]`),
         ];
     checkboxElems.forEach((elem) => (elem.disabled = isOpponentTurn));
     document.querySelector("#draw-card").disabled = isOpponentTurn;

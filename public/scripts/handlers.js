@@ -1,17 +1,15 @@
 import { getCurrentPlayerKey } from "./display.js";
 
-function setHandlers({ playerKeys, players, displayPlayers, isAuto, state }) {
-    const userKey = playerKeys[0],
-        formElem = document.querySelector(`#${userKey}`),
+function setHandlers({ playerIds, players, displayPlayers, isAuto, state }) {
+    const formElem = document.querySelector(`#player`),
         drawCardBtn = document.querySelector("#draw-card"),
-        player = players[userKey],
-        { lastPlayerKey } = state,
+        player = players[playerIds[0]],
         params = {
             player,
             displayPlayers,
             isAuto,
-            lastPlayerKey,
-            playerKeys,
+            state,
+            playerIds,
             players,
         };
     formElem.onsubmit = (e) => handleSubmitPlay({ e, ...params });
@@ -23,8 +21,8 @@ async function handleSubmitPlay({
     player,
     displayPlayers,
     isAuto,
-    lastPlayerKey,
-    playerKeys,
+    state,
+    playerIds,
     players,
 }) {
     e.preventDefault();
@@ -33,12 +31,13 @@ async function handleSubmitPlay({
         .map(({ value }) => value);
     const isSuccess = player.setHand(hand);
     if (isSuccess) {
-        const isGameOver = await displayPlayers();
+        const isGameOver = await displayPlayers(),
+            { lastPlayerId } = state;
         !isGameOver &&
             autoMove({
                 isAuto,
-                lastPlayerKey,
-                playerKeys,
+                lastPlayerId,
+                playerIds,
                 players,
                 displayPlayers,
             });
@@ -50,18 +49,19 @@ async function handleClickDrawCard({
     player,
     displayPlayers,
     isAuto,
-    lastPlayerKey,
-    playerKeys,
+    state,
+    playerIds,
     players,
 }) {
     e.preventDefault();
     if (player.drawSingleCardForTurn()) {
-        const isGameOver = await displayPlayers();
+        const isGameOver = await displayPlayers(),
+            { lastPlayerId } = state;
         !isGameOver &&
             autoMove({
                 isAuto,
-                lastPlayerKey,
-                playerKeys,
+                lastPlayerId,
+                playerIds,
                 players,
                 displayPlayers,
             });
@@ -70,19 +70,19 @@ async function handleClickDrawCard({
 
 function autoMove({
     isAuto,
-    lastPlayerKey,
-    playerKeys,
+    lastPlayerId,
+    playerIds,
     players,
     displayPlayers,
 }) {
-    if (isAuto && lastPlayerKey === playerKeys[0]) {
+    if (isAuto && lastPlayerId === playerIds[0]) {
         setTimeout(async () => {
             players[
-                getCurrentPlayerKey({ playerKeys, lastPlayerKey })
+                getCurrentPlayerKey({ playerIds, lastPlayerId })
             ].autoMove();
             await displayPlayers();
         }, 3000);
     }
 }
 
-export { setHandlers };
+export { setHandlers, autoMove };
